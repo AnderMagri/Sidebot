@@ -1,15 +1,38 @@
 const { WebSocketServer } = require('ws');
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const Anthropic = require('@anthropic-ai/sdk');
+const fs = require('fs');
+const path = require('path');
 require('dotenv').config();
 
 const wss = new WebSocketServer({ port: 9223 });
 console.log("🚀 Sidebot Multi-Bridge active on ws://localhost:9223");
 
+// Store keys in local .env file
+function saveKeysToEnv(geminiKey, claudeKey) {
+  const envPath = path.join(__dirname, '.env');
+  let envContent = '';
+  
+  if (geminiKey) envContent += `GEMINI_API_KEY=${geminiKey}\n`;
+  if (claudeKey) envContent += `CLAUDE_API_KEY=${claudeKey}\n`;
+  
+  fs.writeFileSync(envPath, envContent);
+  
+  // Reload process.env
+  require('dotenv').config();
+}
+
 wss.on('connection', (ws) => {
   ws.on('message', async (message) => {
     try {
       const data = JSON.parse(message);
+      
+      // Handle key saving from UI
+      if (data.type === 'save-keys') {
+        saveKeysToEnv(data.gemini, data.claude);
+        ws.send(JSON.stringify({ type: 'keys-saved' }));
+        return;
+      }
       
       // ROUTE TO GEMINI with Figma context
       if (data.type === 'user-chat' && data.model === 'gemini') {
@@ -19,12 +42,11 @@ wss.on('connection', (ws) => {
           tools: [{ functionDeclarations: getFigmaTools() }]
         });
         
-        // Build context-aware prompt
         const prompt = buildPromptWithContext(data.text, data.figmaContext);
         const result = await model.generateContent(prompt);
-        
-        // Handle function calls if AI wants to modify Figma
         const response = result.response;
+        
+        // Handle function calls
         if (response.functionCalls) {
           ws.send(JSON.stringify({ 
             type: 'execute-figma-actions', 
@@ -38,7 +60,7 @@ wss.on('connection', (ws) => {
         }));
       }
 
-      // ROUTE TO CLAUDE with Figma context
+      // ROUTE TO CLAUDE
       if (data.type === 'user-chat' && data.model === 'claude') {
         const anthropic = new Anthropic({ apiKey: process.env.CLAUDE_API_KEY });
         
@@ -52,7 +74,6 @@ wss.on('connection', (ws) => {
           }],
         });
         
-        // Handle tool use
         if (msg.stop_reason === 'tool_use') {
           const toolUse = msg.content.find(block => block.type === 'tool_use');
           ws.send(JSON.stringify({
@@ -75,7 +96,6 @@ wss.on('connection', (ws) => {
   });
 });
 
-// Define Figma modification tools for AI
 function getFigmaTools() {
   return [
     {
@@ -129,5 +149,5 @@ Page: ${figmaContext.pageName}
 
 User request: ${userMessage}
 
-You can modify Figma by calling the provided tools. Be specific about which nodes to modify using their IDs.`;
+You can modify Figma by calling the provided tools.`;
 }
