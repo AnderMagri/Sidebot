@@ -12,14 +12,15 @@ wss.on('connection', (ws) => {
     try {
       const data = JSON.parse(message);
       
+      // Handle Gemini Chat Requests
       if (data.type === 'user-chat' && data.model === 'gemini') {
-        const genAI = new GoogleGenerativeAI(data.key);
+        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || data.key);
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
         const result = await model.generateContent(data.text);
         ws.send(JSON.stringify({ type: 'ai-response', text: result.response.text() }));
       }
     } catch (err) {
-      console.error("❌ Error processing message:", err);
+      console.error("❌ Bridge Error:", err.message);
     }
   });
 });
