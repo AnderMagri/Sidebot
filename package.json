@@ -1,23 +1,13 @@
 {
   "name": "sidebot-bridge",
   "version": "1.0.0",
-  "description": "Local bridge for the Sidebot AI Figma Plugin",
-  "main": "bridge.js",
-  "scripts": {
-    "start": "node bridge.js"
+  "description": "Local bridge server for Sidebot AI Figma plugin",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AnderMagri/Sidebot.git"
   },
-  "keywords": [
-    "figma",
-    "ai",
-    "bridge",
-    "gemini",
-    "claude"
-  ],
-  "author": "Ander Magri",
-  "license": "MIT",
-  "dependencies": {
-    "ws": "^8.13.0",
-    "@google/generative-ai": "^0.1.0",
-    "dotenv": "^16.0.3"
-  }
+  "bugs": {
+    "url": "https://github.com/AnderMagri/Sidebot/issues"
+  },
+  "homepage": "https://github.com/AnderMagri/Sidebot#readme"
 }
