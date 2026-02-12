@@ -1,89 +1,114 @@
-# 🤖 Sidebot AI
+# 🤖 Sidebot AI - Bridge Server
 
-**Sidebot** is a powerful "Sidecar" assistant for Figma that bridges the gap between your design canvas and world-class AI models like **Gemini** and **Claude**. Operating as a persistent, non-intrusive sidebar, Sidebot allows you to chat with your design, automate complex layer operations, and translate visual layouts into production code in real-time.
+This is the **local bridge server** for the [Sidebot AI Figma Plugin](https://www.figma.com/community/plugin/YOUR_PLUGIN_ID).
 
----
-
-## ✨ Features
-
-- **Model Context Protocol (MCP) Integration**: Leverages the industry-standard MCP to give AI agents "eyes" on your Figma document structure.
-- **Dual-AI Intelligence**: Seamlessly switch between **Gemini Spark** (ideal for deep reasoning and brainstorming) and **Claude Link** (perfect for high-fidelity design-to-code translations).
-- **Local WebSocket Bridge**: Uses a dedicated local server (`bridge.js`) to enable secure, real-time communication between the Figma Desktop app and your AI clients.
-- **Smart Key Storage**: Securely stores your API keys locally using Figma's `clientStorage` API, so you only have to set them up once.
-- **Sleek "Sidecar" UI**: A 240px vertical interface designed to sit perfectly alongside native Figma panels for a distraction-free workflow.
+The bridge connects the Sidebot plugin to Gemini and Claude AI models running on your machine.
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Quick Setup
 
-To use Sidebot, you must run a small local bridge server that acts as the "hands" for the AI.
+### 1. Install the Figma Plugin
+First, install **Sidebot AI** from the Figma Community:
 
-### 1. Clone & Install
-Clone this repository and install the necessary Node.js dependencies:
+👉 [Install Sidebot AI Plugin](https://www.figma.com/community/plugin/YOUR_PLUGIN_ID)
 
-```
-bash
-git clone https://github.com/AnderMagri/Sidebot
+### 2. Download & Install Bridge
+```bash
+git clone https://github.com/AnderMagri/Sidebot.git
 cd Sidebot
 npm install
-
 ```
 
-## 2. Configure Your Environment
+### 3. Configure API Keys
+Copy the example file:
+```bash
+cp .env.example .env
+```
 
-Create a .env file in the root directory and add your API keys:
+Edit `.env` and add your keys:
+- **Gemini**: Get from [Google AI Studio](https://aistudio.google.com/)
+- **Claude**: Get from [Anthropic Console](https://console.anthropic.com/)
+```env
+GEMINI_API_KEY=your_key_here
+CLAUDE_API_KEY=your_key_here
+```
 
-Gemini Key: Obtain from Google AI Studio. https://aistudio.google.com/
+### 4. Start the Bridge
+```bash
+npm start
+```
 
-Claude Key: Obtain from the Anthropic Console. https://console.anthropic.com/
+You should see:
+```
+🚀 Sidebot Multi-Bridge active on ws://localhost:9223
+```
 
-3. Start the Bridge Server
-Run the bridge in your terminal. This must remain active while you use the plugin:
+**Keep this running** while using the plugin in Figma.
 
-Bash
-node bridge.js
-Expected output: 🚀 Sidebot Bridge active on ws://localhost:9223.
-
-4. Install the Figma Plugin
-Open the Figma Desktop App.
-
-Navigate to Plugins > Development > Import plugin from manifest....
-
-Select the manifest.json file located in the /plugin folder.
-
-🛠️ Usage Guide
-Activate: Open the Sidebot AI plugin and click "Turn On Bridge".
-
-Select Model: Choose your preferred AI engine.
-
-Analyze & Create:
-
-Select any frame or layer in Figma.
-
-Ask Sidebot: "Translate this selection to Tailwind CSS" or "Analyze the spacing consistency of this layout".
-
-Visual Feedback: The green pulsing LED indicates that Sidebot is "Live" and connected to your local bridge.
-
-📂 Project Structure
-Plaintext
-Sidebot/
-├── bridge.js          # The Node.js WebSocket bridge server
-├── package.json       # Project dependencies and scripts
-└── plugin/            # Figma Plugin source files
-    ├── manifest.json  # Plugin permissions and entry points
-    ├── code.js        # Main Figma API logic
-    └── ui.html        # Sidecar interface and chat UI
-
-🔒 Security & Privacy
-Local Execution: All communication happens over localhost:9223. Your design data is never stored on Sidebot servers.
-
-Zero-Storage Keys: API keys are stored on your local machine only and never committed to GitHub.
-
-User-Controlled: The AI only accesses the layers you select or explicitly authorize.
-
-Made with ❤️ for the Figma Community.
-
+### 5. Use the Plugin
+1. Open Figma Desktop
+2. Run **Sidebot AI** from Plugins menu
+3. The plugin will auto-detect the running bridge
+4. Enter your API keys in the plugin UI
+5. Choose Gemini or Claude and start designing!
 
 ---
 
-To ensure your GitHub project is fully ready for users, I can also provide the content for the **`.env.example`** and **`package.json`** files to include in your repository. Would you like me to do that?
+## 📋 Requirements
+
+- Node.js 16+ 
+- Figma Desktop App (plugin doesn't work in browser)
+- API keys for Gemini and/or Claude
+
+---
+
+## 🔒 Security & Privacy
+
+✅ All communication over `localhost` only  
+✅ API keys stored locally in `.env`  
+✅ Your designs never leave your machine  
+✅ No data sent to Sidebot servers (there are none!)
+
+---
+
+## 🛠️ Troubleshooting
+
+**Plugin says "Bridge Not Running":**
+- Make sure `npm start` is running in terminal
+- Check you see "🚀 Sidebot Multi-Bridge active"
+
+**"Invalid API Key" errors:**
+- Double-check your `.env` file has correct keys
+- Verify keys work at AI Studio / Anthropic Console
+
+**Port already in use:**
+- Another app is using port 9223
+- Stop other apps or change port in `bridge.js` (line 6)
+
+---
+
+## 💡 How It Works
+```
+Figma Plugin (UI) 
+    ↕️ WebSocket (localhost:9223)
+Bridge Server (this repo)
+    ↕️ HTTPS API calls
+Gemini / Claude AI
+```
+
+The bridge is needed because Figma plugins can't make direct API calls to external services for security reasons.
+
+---
+
+## 📝 License
+MIT © Ander Magri
+
+---
+
+## 🤝 Contributing
+Issues and PRs welcome! Please check existing issues first.
+
+---
+
+**Made with ❤️ for the Figma Community**
