@@ -1,0 +1,12 @@
+{
+  "name": "Gemini for Figma",
+  "id": "123456789",
+  "api": "1.0.0",
+  "main": "code.js",
+  "ui": "ui.html",
+  "capabilities": [],
+  "networkAccess": {
+    "allowedDomains": ["https://generativelanguage.googleapis.com"]
+  },
+  "editorType": ["figma"]
+}
