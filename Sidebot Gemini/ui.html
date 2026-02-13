@@ -83,12 +83,21 @@
   </style>
 </head>
 <body>
+  <!-- Beta Warning Banner -->
+  <div style="background: #3c2a00; border: 1px solid #8b6914; border-radius: 4px; padding: 8px 10px; margin-bottom: 12px; font-size: 10px; color: #ffd666;">
+    <strong>⚠️ BETA:</strong> This plugin is in beta. Save your work before using. 
+    <a href="#" id="betaInfo" style="color: #ffd666; text-decoration: underline;">Learn more</a>
+  </div>
+
   <h3>Sidebot Gemini</h3>
   
   <!-- API Key Section (shown when no key saved) -->
   <div id="apiKeySection">
     <div style="font-size: 10px; color: #888; margin-bottom: 6px;">
       Get your API key at: <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color: #18A0FB;">aistudio.google.com/app/apikey</a>
+    </div>
+    <div style="font-size: 9px; color: #ffd666; background: #3c2a00; padding: 6px 8px; border-radius: 3px; margin-bottom: 6px; border: 1px solid #8b6914;">
+      ⚠️ Use a personal API key. It's visible in network requests (normal for client-side apps).
     </div>
     <div class="key-row">
       <input type="password" id="apiKey" placeholder="Paste your Gemini API Key">
@@ -318,6 +327,22 @@ Include only the fields that need to change. No markdown, no explanation, no pre
           });
 
           const result = await response.json();
+
+          // Handle HTTP errors
+          if (!response.ok) {
+            let errorMsg = "API Error";
+            if (response.status === 503) {
+              errorMsg = "❌ Gemini API is temporarily unavailable (503). Please try again in a moment.";
+            } else if (response.status === 429) {
+              errorMsg = "❌ Rate limit exceeded. Please wait before trying again.";
+            } else if (response.status === 401 || response.status === 403) {
+              errorMsg = "❌ Invalid API key. Please check your key and try again.";
+            } else if (result.error) {
+              errorMsg = `❌ API Error: ${result.error.message}`;
+            }
+            setStatus(errorMsg);
+            return;
+          }
 
           // FIX: Prevent TypeError by checking for valid candidates
           if (!result.candidates || !result.candidates[0]) {
