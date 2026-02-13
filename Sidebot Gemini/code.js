@@ -256,13 +256,14 @@ figma.ui.onmessage = async (msg) => {
     
     // Send feedback to UI
     if (appliedCount > 0) {
-      const msg = `✅ Success: Updated ${appliedCount} layers.`;
-      figma.notify(msg);
-      figma.ui.postMessage({ type: 'changes-applied', message: msg });
+      const timing = msg.timing ? ` (${msg.timing.total}s total)` : '';
+      const message = `✅ Success: Updated ${appliedCount} layers${timing}`;
+      figma.notify(message);
+      figma.ui.postMessage({ type: 'changes-applied', message: message });
     } else {
-      const msg = "⚠️ Gemini sent changes, but I couldn't find those layers.";
-      figma.notify(msg);
-      figma.ui.postMessage({ type: 'changes-applied', message: msg });
+      const message = "⚠️ Gemini sent changes, but I couldn't find those layers.";
+      figma.notify(message);
+      figma.ui.postMessage({ type: 'changes-applied', message: message });
     }
   }
 };
