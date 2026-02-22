@@ -1,0 +1,12 @@
+{
+  "name": "Sidebot",
+  "id": "sidebot-v1",
+  "api": "1.0.0",
+  "main": "code.js",
+  "ui": "ui.html",
+  "editorType": ["figma"],
+  "networkAccess": {
+    "allowedDomains": ["none"],
+    "reasoning": "Plugin communicates with Claude Desktop via optional bridge server - no external network needed"
+  }
+}

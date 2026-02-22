@@ -1,0 +1,20 @@
+{
+  "name": "sidebot-bridge",
+  "version": "1.0.0",
+  "description": "Bridge server connecting Figma Plugin to Claude Desktop",
+  "main": "bridge-server.js",
+  "scripts": {
+    "start": "node bridge-server.js",
+    "dev": "nodemon bridge-server.js"
+  },
+  "keywords": ["figma", "claude", "bridge"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "ws": "^8.14.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}

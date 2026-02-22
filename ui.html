@@ -1,0 +1,1476 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Sidebot</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { 
+  font-family: 'Inter', -apple-system, sans-serif; 
+  background: #1a1a1a; 
+  color: #fff;
+  overflow: hidden;
+}
+
+/* ─── HEADER ─── */
+.header {
+  background: #2a2a2a;
+  padding: 16px;
+  border-bottom: 1px solid #3a3a3a;
+}
+
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.connection-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #4ade80;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.header-badges {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.beta-badge {
+  background: #fbbf24;
+  color: #000;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.project-title {
+  font-size: 13px;
+  opacity: 0.9;
+  font-weight: 600;
+  color: #fff;
+}
+
+.project-title.empty {
+  opacity: 0.5;
+  font-style: italic;
+  font-size: 11px;
+}
+
+/* ─── TABS ─── */
+.tabs {
+  display: flex;
+  background: #2a2a2a;
+  border-bottom: 1px solid #3a3a3a;
+}
+
+.tab {
+  flex: 1;
+  padding: 10px 8px;
+  font-size: 11px;
+  text-align: center;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+  opacity: 0.6;
+}
+
+.tab:hover { opacity: 0.9; background: #333; }
+.tab.active { opacity: 1; border-bottom-color: #7B4FBE; background: #333; }
+
+/* ─── TAB CONTENT ─── */
+.tab-content {
+  display: none;
+  height: calc(100vh - 120px);
+  overflow-y: auto;
+  padding: 16px;
+}
+
+.tab-content.active { display: block; }
+
+/* ─── PROJECTS TAB ─── */
+.project-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.project-item {
+  background: #2a2a2a;
+  border: 1px solid #3a3a3a;
+  border-radius: 6px;
+  padding: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.project-item:hover {
+  border-color: #7B4FBE;
+  background: #333;
+}
+
+.project-item.active {
+  border-color: #7B4FBE;
+  background: #333;
+}
+
+.project-name {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.project-stats {
+  font-size: 10px;
+  opacity: 0.6;
+  display: flex;
+  gap: 12px;
+}
+
+.project-delete {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: #3a3a3a;
+  border: none;
+  color: #ff6b6b;
+  padding: 4px 8px;
+  border-radius: 3px;
+  font-size: 10px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.project-item:hover .project-delete {
+  opacity: 1;
+}
+
+.project-delete:hover {
+  background: #ff6b6b;
+  color: #fff;
+}
+
+.new-project-section {
+  background: #2a2a2a;
+  border: 2px dashed #3a3a3a;
+  border-radius: 6px;
+  padding: 16px;
+}
+
+.btn-add-project {
+  width: 100%;
+  padding: 14px;
+  background: #2a2a2a;
+  border: 2px dashed #7B4FBE;
+  border-radius: 6px;
+  color: #7B4FBE;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 12px;
+}
+
+.btn-add-project:hover {
+  background: #333;
+  border-color: #9b6fde;
+  color: #9b6fde;
+}
+
+/* ─── BOTTOM SHEET ─── */
+.bottom-sheet {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1000;
+  display: none;
+}
+
+.bottom-sheet.open {
+  display: block;
+}
+
+.bottom-sheet-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  animation: fadeIn 0.2s;
+}
+
+.bottom-sheet-content {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  max-height: 80%;
+  background: #1a1a1a;
+  border-radius: 12px 12px 0 0;
+  animation: slideUp 0.3s;
+  overflow-y: auto;
+}
+
+.sheet-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  border-bottom: 1px solid #3a3a3a;
+  position: sticky;
+  top: 0;
+  background: #1a1a1a;
+  z-index: 1;
+}
+
+.sheet-title {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.sheet-close {
+  background: #2a2a2a;
+  border: none;
+  color: #fff;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.sheet-close:hover {
+  background: #3a3a3a;
+}
+
+.sheet-body {
+  padding: 16px;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.new-project-section input {
+  width: 100%;
+  padding: 8px;
+  background: #1a1a1a;
+  border: 1px solid #3a3a3a;
+  border-radius: 4px;
+  color: #fff;
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+
+.btn-primary {
+  width: 100%;
+  padding: 10px;
+  background: #7B4FBE;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-primary:hover {
+  background: #6a3fa8;
+}
+
+.btn-success {
+  width: 100%;
+  padding: 10px;
+  background: #4ade80;
+  color: #000;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 8px;
+}
+
+.btn-success:hover {
+  background: #3ac970;
+}
+
+.btn-secondary {
+  padding: 10px;
+  background: #2a2a2a;
+  border: 1px solid #7B4FBE;
+  color: #fff;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-secondary:hover {
+  background: #7B4FBE;
+  border-color: #7B4FBE;
+}
+
+.send-claude-section {
+  margin-bottom: 16px;
+  padding: 12px;
+  background: #2a2a2a;
+  border-radius: 6px;
+  border: 1px solid #3a3a3a;
+}
+
+.import-section {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #3a3a3a;
+}
+
+.section-title {
+  font-size: 11px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.section-desc {
+  font-size: 10px;
+  opacity: 0.6;
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+
+textarea {
+  width: 100%;
+  padding: 8px;
+  background: #1a1a1a;
+  border: 1px solid #3a3a3a;
+  border-radius: 4px;
+  color: #fff;
+  font-size: 10px;
+  font-family: monospace;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+/* ─── GOALS TAB ─── */
+.goals-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.goals-title {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.goals-progress {
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 6px;
+  background: #2a2a2a;
+  border-radius: 3px;
+  overflow: hidden;
+  margin-top: 8px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #7B4FBE, #9b6fde);
+  transition: width 0.3s;
+}
+
+.goal-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.goal-item {
+  background: #2a2a2a;
+  border: 1px solid #3a3a3a;
+  border-radius: 6px;
+  padding: 12px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.goal-item:hover {
+  background: #333;
+}
+
+.goal-checkbox {
+  width: 18px;
+  height: 18px;
+  border: 2px solid #3a3a3a;
+  border-radius: 4px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  margin-top: 2px;
+}
+
+.goal-item.done .goal-checkbox {
+  background: #7B4FBE;
+  border-color: #7B4FBE;
+}
+
+.goal-item.done .goal-checkbox::after {
+  content: '✓';
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.goal-text {
+  flex: 1;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.goal-item.done .goal-text {
+  opacity: 0.5;
+  text-decoration: line-through;
+}
+
+/* ─── FIXES TAB ─── */
+.fix-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.fix-item {
+  background: #2a2a2a;
+  border: 1px solid #3a3a3a;
+  border-left: 3px solid #ff6b6b;
+  border-radius: 6px;
+  padding: 12px;
+}
+
+.fix-item.done {
+  border-left-color: #4ade80;
+  opacity: 0.6;
+}
+
+.fix-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.fix-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #ff6b6b;
+}
+
+.fix-item.done .fix-title {
+  color: #4ade80;
+}
+
+.fix-description {
+  font-size: 11px;
+  line-height: 1.5;
+  margin-bottom: 10px;
+  opacity: 0.8;
+}
+
+.fix-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.fix-btn {
+  flex: 1;
+  padding: 6px 10px;
+  font-size: 10px;
+  font-weight: 600;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.fix-btn.done-btn {
+  background: #4ade80;
+  color: #000;
+}
+
+.fix-btn.done-btn:hover {
+  background: #3ac970;
+}
+
+.fix-btn.done-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ─── EMPTY STATE ─── */
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  opacity: 0.5;
+}
+
+.empty-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+}
+
+.empty-text {
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+/* ─── SETTINGS TAB ─── */
+.settings-section {
+  margin-bottom: 24px;
+}
+
+.settings-header {
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.settings-description {
+  font-size: 10px;
+  opacity: 0.6;
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+
+.status-connected {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: #1a3d1a;
+  border: 1px solid #2a5a2a;
+  border-radius: 4px;
+  font-size: 11px;
+}
+
+.status-card {
+  padding: 12px;
+  border-radius: 6px;
+  font-size: 11px;
+  line-height: 1.6;
+  margin-bottom: 12px;
+}
+
+.status-card.connected {
+  background: #1a3d1a;
+  border: 1px solid #2a5a2a;
+  color: #4ade80;
+}
+
+.status-card.disconnected {
+  background: #3d1a1a;
+  border: 1px solid #5a2a2a;
+  color: #ff6b6b;
+}
+
+.btn-download {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  background: #7B4FBE;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  transition: all 0.2s;
+}
+
+.btn-download:hover {
+  background: #6a3fa8;
+  transform: translateY(-1px);
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #4ade80;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.help-text {
+  font-size: 10px;
+  opacity: 0.5;
+  line-height: 1.5;
+  margin-top: 8px;
+}
+
+.keyboard-shortcuts {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 8px;
+  font-size: 10px;
+  padding: 12px;
+  background: #2a2a2a;
+  border-radius: 4px;
+}
+
+.key {
+  background: #1a1a1a;
+  padding: 4px 8px;
+  border-radius: 3px;
+  font-weight: 600;
+  text-align: center;
+  min-width: 24px;
+}
+
+/* ─── SCROLLBAR ─── */
+.tab-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.tab-content::-webkit-scrollbar-track {
+  background: #1a1a1a;
+}
+
+.tab-content::-webkit-scrollbar-thumb {
+  background: #3a3a3a;
+  border-radius: 3px;
+}
+
+.tab-content::-webkit-scrollbar-thumb:hover {
+  background: #4a4a4a;
+}
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div class="header-top">
+    <div class="connection-status">
+      <div class="status-dot"></div>
+      <span>Claude</span>
+    </div>
+    <div class="header-badges">
+      <div class="beta-badge">BETA</div>
+      <div class="beta-badge">v1.0</div>
+    </div>
+  </div>
+  <div class="project-title empty" id="headerProject">No project selected</div>
+</div>
+
+<!-- Tabs -->
+<div class="tabs">
+  <div class="tab active" data-tab="projects">📁 Projects</div>
+  <div class="tab" data-tab="goals">🎯 Goals</div>
+  <div class="tab" data-tab="fixes">🔧 Fixes</div>
+  <div class="tab" data-tab="settings">⚙️ Settings</div>
+</div>
+
+<!-- Projects Tab -->
+<div class="tab-content active" id="projects-content">
+  <div class="project-list" id="projectList"></div>
+  
+  <button class="btn-add-project" onclick="openAddProject()">+ Add New Project</button>
+</div>
+
+<!-- Add Project Bottom Sheet -->
+<div class="bottom-sheet" id="addProjectSheet">
+  <div class="bottom-sheet-overlay" onclick="closeAddProject()"></div>
+  <div class="bottom-sheet-content">
+    <div class="sheet-header">
+      <div class="sheet-title">📋 Add New Project</div>
+      <button class="sheet-close" onclick="closeAddProject()">✕</button>
+    </div>
+    
+    <div class="sheet-body">
+      <div class="section-desc">
+        1. Copy this prompt and paste in Claude Desktop with your PRD:
+      </div>
+      <textarea id="promptTemplate" readonly rows="3" onclick="copyPrompt()" style="margin-bottom: 12px; opacity: 0.8; cursor: pointer; background: #2a2a2a; font-size: 10px;">Analyze this PRD and create JSON for Sidebot:
+
+[Paste your PRD here]
+
+Return format: {"projectName": "...", "goals": ["...", "..."]}</textarea>
+      
+      <div class="section-desc" style="margin-top: 12px;">
+        2. Paste Claude's JSON response here:
+      </div>
+      <textarea id="jsonInput" rows="4" placeholder='{"projectName": "My Project", "goals": ["Goal 1", "Goal 2"]}' style="font-size: 11px;"></textarea>
+      <button class="btn-success" onclick="importJSON()">✨ Import Project + Goals</button>
+    </div>
+  </div>
+</div>
+
+<!-- Goals Tab -->
+<div class="tab-content" id="goals-content">
+  <div class="goals-header">
+    <div class="goals-title" id="goalsTitle">No project selected</div>
+    <div class="goals-progress">
+      <span id="goalsProgress">0/0 complete (0%)</span>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="send-claude-section">
+    <div style="font-size: 11px; font-weight: 600; margin-bottom: 8px; opacity: 0.7;">📤 Send to Claude for Review</div>
+    <div style="display: flex; gap: 8px;">
+      <button class="btn-secondary" onclick="sendToClaude('selection')" style="flex: 1;">
+        📍 Selection
+      </button>
+      <button class="btn-secondary" onclick="sendToClaude('page')" style="flex: 1;">
+        📄 Current Page
+      </button>
+    </div>
+  </div>
+  
+  <div class="goal-list" id="goalList"></div>
+  
+  <div class="empty-state" id="goalsEmpty">
+    <div class="empty-icon">🎯</div>
+    <div class="empty-text">
+      No goals yet.<br>
+      Add a project with goals to track progress.
+    </div>
+  </div>
+</div>
+
+<!-- Fixes Tab -->
+<div class="tab-content" id="fixes-content">
+  <div class="fix-list" id="fixList"></div>
+  
+  <div class="empty-state" id="fixesEmpty">
+    <div class="empty-icon">✅</div>
+    <div class="empty-text">
+      No fixes needed yet.<br>
+      Select a frame and ask Claude to review it.
+    </div>
+  </div>
+</div>
+
+<!-- Settings Tab -->
+<div class="tab-content" id="settings-content">
+  <div class="settings-section">
+    <div class="settings-header">🔗 Connection Status</div>
+    <div class="settings-description">
+      Sidebot works in two modes:
+    </div>
+    <div id="bridgeStatusCard" class="status-card"></div>
+  </div>
+  
+  <div class="settings-section" id="bridgeSetupSection">
+    <div class="settings-header">⚡ Enable Seamless Mode</div>
+    <div class="settings-description">
+      Download the free Bridge app for automatic sync with Claude Desktop.
+    </div>
+    <a href="https://github.com/AnderMagri/sidebot/tree/main/bridge" target="_blank" class="btn-download">
+      📥 Download Bridge App
+    </a>
+    <div class="help-text">
+      <strong>Quick Setup:</strong><br>
+      1. Download from GitHub<br>
+      2. Extract and run start.sh (Mac) or start.bat (Windows)<br>
+      3. Plugin auto-connects! 🟢<br><br>
+      
+      <strong>Or use Manual Mode</strong> - No installation needed!
+    </div>
+  </div>
+  
+  <div class="settings-section">
+    <div class="settings-header">⌨️ Keyboard Shortcuts</div>
+    <div class="keyboard-shortcuts">
+      <span class="key">1</span> <span>Projects</span>
+      <span class="key">2</span> <span>Goals</span>
+      <span class="key">3</span> <span>Fixes</span>
+      <span class="key">4</span> <span>Settings</span>
+    </div>
+  </div>
+  
+  <div class="settings-section">
+    <div class="settings-header">ℹ️ About</div>
+    <div class="help-text">
+      <strong>Sidebot v1.0</strong><br>
+      AI-powered PRD validation for Figma<br><br>
+      
+      Track requirements, get instant feedback, and catch issues early with Claude Desktop integration.<br><br>
+      
+      <strong>Support:</strong> GitHub Issues<br>
+      <strong>License:</strong> MIT
+    </div>
+  </div>
+</div>
+
+<script>
+  // ═══════════════════════════════════════════════════════════
+  // PRODUCT COPILOT v1.0 - UI with Bridge Connection
+  // ═══════════════════════════════════════════════════════════
+  
+  let currentProject = null;
+  let allProjects = [];
+  let bridgeSocket = null;
+  let bridgeConnected = false;
+  
+  // ─── CONNECT TO BRIDGE SERVER ───
+  function connectToBridge() {
+    try {
+      bridgeSocket = new WebSocket('ws://localhost:3001');
+      
+      bridgeSocket.onopen = () => {
+        console.log('🟢 Connected to bridge server');
+        bridgeConnected = true;
+        updateConnectionIndicator(true);
+        
+        parent.postMessage({ 
+          pluginMessage: { 
+            type: 'connect-to-bridge',
+            connected: true
+          } 
+        }, '*');
+        
+        // Send current state
+        sendStateToBridge();
+      };
+      
+      bridgeSocket.onmessage = (event) => {
+        try {
+          const message = JSON.parse(event.data);
+          console.log('📨 From bridge:', message.type);
+          
+          handleBridgeMessage(message);
+        } catch (e) {
+          console.error('Error parsing bridge message:', e);
+        }
+      };
+      
+      bridgeSocket.onclose = () => {
+        console.log('🔴 Bridge disconnected');
+        bridgeConnected = false;
+        updateConnectionIndicator(false);
+        
+        parent.postMessage({ 
+          pluginMessage: { 
+            type: 'connect-to-bridge',
+            connected: false
+          } 
+        }, '*');
+        
+        // Attempt reconnect after 3 seconds
+        setTimeout(connectToBridge, 3000);
+      };
+      
+      bridgeSocket.onerror = (error) => {
+        console.error('Bridge connection error:', error);
+      };
+      
+    } catch (e) {
+      console.error('Failed to connect to bridge:', e);
+      setTimeout(connectToBridge, 3000);
+    }
+  }
+  
+  // ─── HANDLE MESSAGES FROM BRIDGE ───
+  function handleBridgeMessage(message) {
+    if (message.type === 'connection-established') {
+      console.log('✅ Bridge confirmed connection');
+    }
+    
+    if (message.type === 'add-goals-from-claude') {
+      // Claude is adding goals via bridge!
+      const existing = allProjects.find(p => p.name === message.projectName);
+      
+      if (existing) {
+        parent.postMessage({ 
+          pluginMessage: { 
+            type: 'add-goals',
+            projectId: existing.id,
+            goals: message.goals,
+            prdText: message.prdText || ''
+          } 
+        }, '*');
+      } else {
+        // Create new project
+        parent.postMessage({ 
+          pluginMessage: { 
+            type: 'create-project',
+            name: message.projectName
+          } 
+        }, '*');
+        
+        window.pendingGoals = {
+          goals: message.goals,
+          prdText: message.prdText || ''
+        };
+      }
+      
+      // Show notification
+      alert(`✅ Claude added ${message.goals.length} goals to "${message.projectName}"!`);
+    }
+    
+    if (message.type === 'add-fixes-from-claude') {
+      // Claude is adding fixes via bridge!
+      const existing = allProjects.find(p => p.name === message.projectName);
+      
+      if (existing) {
+        parent.postMessage({ 
+          pluginMessage: { 
+            type: 'add-fixes',
+            projectId: existing.id,
+            fixes: message.fixes
+          } 
+        }, '*');
+        
+        // Show notification
+        alert(`✅ Claude found ${message.fixes.length} issues in "${message.projectName}"!`);
+        
+        // Switch to Fixes tab
+        setTimeout(() => {
+          document.querySelector('[data-tab="fixes"]').click();
+        }, 500);
+      }
+    }
+  }
+  
+  // ─── SEND STATE TO BRIDGE ───
+  function sendStateToBridge() {
+    if (!bridgeSocket || bridgeSocket.readyState !== WebSocket.OPEN) return;
+    
+    bridgeSocket.send(JSON.stringify({
+      type: 'state-update',
+      projects: allProjects,
+      activeProject: currentProject
+    }));
+  }
+  
+  // ─── UPDATE CONNECTION INDICATOR ───
+  function updateConnectionIndicator(connected) {
+    const dot = document.querySelector('.status-dot');
+    const text = document.querySelector('.connection-status span');
+    
+    if (connected) {
+      dot.style.background = '#4ade80';
+      text.textContent = 'Claude';
+    } else {
+      dot.style.background = '#ff6b6b';
+      text.textContent = 'Offline';
+    }
+    
+    // Update settings page status card
+    updateSettingsStatus(connected);
+  }
+  
+  // ─── UPDATE SETTINGS STATUS CARD ───
+  function updateSettingsStatus(connected) {
+    const card = document.getElementById('bridgeStatusCard');
+    const setupSection = document.getElementById('bridgeSetupSection');
+    
+    if (connected) {
+      card.className = 'status-card connected';
+      card.innerHTML = `
+        <strong>🟢 Seamless Mode Active</strong><br>
+        Bridge connected! Talk to Claude naturally - everything syncs automatically.
+      `;
+      setupSection.style.display = 'none';
+    } else {
+      card.className = 'status-card disconnected';
+      card.innerHTML = `
+        <strong>🔴 Manual Mode</strong><br>
+        Copy/paste JSON workflow. Or download Bridge app below for seamless integration.
+      `;
+      setupSection.style.display = 'block';
+    }
+  }
+  
+  // ─── INITIALIZE ───
+  parent.postMessage({ pluginMessage: { type: 'load-projects' } }, '*');
+  
+  // Connect to bridge
+  connectToBridge();
+  
+  // ─── TAB SWITCHING ───
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      const tabName = tab.dataset.tab;
+      
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      document.getElementById(tabName + '-content').classList.add('active');
+    });
+  });
+  
+  // ─── KEYBOARD SHORTCUTS ───
+  document.addEventListener('keydown', (e) => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+    
+    const keys = { '1': 'projects', '2': 'goals', '3': 'fixes', '4': 'settings' };
+    if (keys[e.key]) {
+      document.querySelector('[data-tab="' + keys[e.key] + '"]').click();
+    }
+  });
+  
+  // ─── COPY PROMPT TEMPLATE ───
+  function copyPrompt() {
+    const textarea = document.getElementById('promptTemplate');
+    textarea.select();
+    document.execCommand('copy');
+    
+    // Visual feedback
+    const originalBg = textarea.style.background;
+    textarea.style.background = '#1a4a1a';
+    setTimeout(() => {
+      textarea.style.background = originalBg;
+    }, 200);
+  }
+  
+  // ─── OPEN/CLOSE ADD PROJECT SHEET ───
+  function openAddProject() {
+    document.getElementById('addProjectSheet').classList.add('open');
+  }
+  
+  function closeAddProject() {
+    document.getElementById('addProjectSheet').classList.remove('open');
+  }
+  
+  // ─── SEND SELECTION TO CLAUDE (via Bridge) ───
+  function sendToClaude(mode) {
+    if (!bridgeConnected) {
+      alert('⚠️ Bridge server not connected!\n\nMake sure you started the bridge server:\nnpm start');
+      return;
+    }
+    
+    parent.postMessage({ 
+      pluginMessage: { 
+        type: 'send-to-claude',
+        mode: mode // 'selection' or 'page'
+      } 
+    }, '*');
+  }
+  
+  // ─── IMPORT JSON ───
+  function importJSON() {
+    const jsonText = document.getElementById('jsonInput').value.trim();
+    
+    if (!jsonText) {
+      alert('Please paste JSON from Claude!');
+      return;
+    }
+    
+    try {
+      const data = JSON.parse(jsonText);
+      
+      if (!data.projectName || !data.goals || !Array.isArray(data.goals)) {
+        alert('Invalid JSON. Need: {"projectName": "...", "goals": [...]}');
+        return;
+      }
+      
+      if (data.goals.length === 0) {
+        alert('No goals found!');
+        return;
+      }
+      
+      const existing = allProjects.find(p => p.name === data.projectName);
+      
+      if (existing) {
+        if (confirm('Project "' + data.projectName + '" exists. Replace goals with ' + data.goals.length + ' new ones?')) {
+          parent.postMessage({ 
+            pluginMessage: { 
+              type: 'add-goals',
+              projectId: existing.id,
+              goals: data.goals,
+              prdText: data.prdText || ''
+            } 
+          }, '*');
+          
+          document.getElementById('jsonInput').value = '';
+          selectProject(existing.id);
+          setTimeout(() => {
+            document.querySelector('[data-tab="goals"]').click();
+          }, 100);
+        }
+      } else {
+        // Create new project with goals automatically
+        parent.postMessage({ 
+          pluginMessage: { 
+            type: 'create-project', 
+            name: data.projectName
+          } 
+        }, '*');
+        
+        window.pendingGoals = {
+          goals: data.goals,
+          prdText: data.prdText || ''
+        };
+        
+        document.getElementById('jsonInput').value = '';
+      }
+      
+    } catch (e) {
+      alert('Invalid JSON: ' + e.message);
+    }
+  }
+  
+  // ─── DELETE PROJECT ───
+  function deleteProject(projectId, event) {
+    event.stopPropagation();
+    
+    if (!confirm('Delete this project?')) return;
+    
+    parent.postMessage({ 
+      pluginMessage: { 
+        type: 'delete-project', 
+        projectId 
+      } 
+    }, '*');
+  }
+  
+  // ─── SELECT PROJECT ───
+  function selectProject(projectId) {
+    parent.postMessage({ 
+      pluginMessage: { 
+        type: 'set-active-project', 
+        projectId 
+      } 
+    }, '*');
+  }
+  
+  // ─── TOGGLE GOAL ───
+  function toggleGoal(goalId) {
+    if (!currentProject) return;
+    
+    parent.postMessage({ 
+      pluginMessage: { 
+        type: 'toggle-goal', 
+        projectId: currentProject.id,
+        goalId 
+      } 
+    }, '*');
+  }
+  
+  // ─── MARK FIX DONE ───
+  function markFixDone(fixId) {
+    if (!currentProject) return;
+    
+    parent.postMessage({ 
+      pluginMessage: { 
+        type: 'mark-fix-done', 
+        projectId: currentProject.id,
+        fixId 
+      } 
+    }, '*');
+  }
+  
+  // ─── RENDER FUNCTIONS ───
+  function renderProjects(projects, activeProject) {
+    const list = document.getElementById('projectList');
+    
+    if (projects.length === 0) {
+      list.innerHTML = '<div class="empty-state"><div class="empty-icon">📁</div><div class="empty-text">No projects yet.<br>Create your first one below!</div></div>';
+      return;
+    }
+    
+    list.innerHTML = projects.map(p => 
+      '<div class="project-item ' + (p.id === (activeProject && activeProject.id) ? 'active' : '') + '" onclick="selectProject(\'' + p.id + '\')">' +
+        '<div class="project-name">' + p.name + '</div>' +
+        '<div class="project-stats">' +
+          '<span>' + (p.goals ? p.goals.length : 0) + ' goals</span>' +
+          '<span>' + (p.fixes ? p.fixes.length : 0) + ' fixes</span>' +
+        '</div>' +
+        '<button class="project-delete" onclick="deleteProject(\'' + p.id + '\', event)">Delete</button>' +
+      '</div>'
+    ).join('');
+  }
+  
+  function renderGoals(project) {
+    const list = document.getElementById('goalList');
+    const empty = document.getElementById('goalsEmpty');
+    const title = document.getElementById('goalsTitle');
+    const progress = document.getElementById('goalsProgress');
+    const fill = document.getElementById('progressFill');
+    
+    if (!project) {
+      title.textContent = 'No project selected';
+      progress.textContent = '0/0 complete (0%)';
+      fill.style.width = '0%';
+      list.innerHTML = '';
+      empty.style.display = 'block';
+      return;
+    }
+    
+    title.textContent = project.name;
+    
+    if (!project.goals || project.goals.length === 0) {
+      progress.textContent = '0/0 complete (0%)';
+      fill.style.width = '0%';
+      list.innerHTML = '';
+      empty.style.display = 'block';
+      return;
+    }
+    
+    empty.style.display = 'none';
+    
+    const doneCount = project.goals.filter(g => g.status === 'done').length;
+    const total = project.goals.length;
+    const percent = Math.round((doneCount / total) * 100);
+    
+    progress.textContent = doneCount + '/' + total + ' complete (' + percent + '%)';
+    fill.style.width = percent + '%';
+    
+    list.innerHTML = project.goals.map(g =>
+      '<div class="goal-item ' + (g.status === 'done' ? 'done' : '') + '" onclick="toggleGoal(\'' + g.id + '\')">' +
+        '<div class="goal-checkbox"></div>' +
+        '<div class="goal-text">' + g.text + '</div>' +
+      '</div>'
+    ).join('');
+  }
+  
+  function renderFixes(project) {
+    const list = document.getElementById('fixList');
+    const empty = document.getElementById('fixesEmpty');
+    
+    if (!project || !project.fixes || project.fixes.length === 0) {
+      list.innerHTML = '';
+      empty.style.display = 'block';
+      return;
+    }
+    
+    empty.style.display = 'none';
+    
+    list.innerHTML = project.fixes.map(f =>
+      '<div class="fix-item ' + (f.status === 'done' ? 'done' : '') + '">' +
+        '<div class="fix-header">' +
+          '<div class="fix-title">' + (f.status === 'done' ? '✅' : '⚠️') + ' ' + (f.issue || 'Issue') + '</div>' +
+        '</div>' +
+        '<div class="fix-description">' + (f.description || f.suggestion || 'No details') + '</div>' +
+        '<div class="fix-actions">' +
+          '<button class="fix-btn done-btn" onclick="markFixDone(\'' + f.id + '\')" ' + (f.status === 'done' ? 'disabled' : '') + '>' +
+            (f.status === 'done' ? 'Done ✓' : 'Mark as Fixed') +
+          '</button>' +
+        '</div>' +
+      '</div>'
+    ).join('');
+  }
+  
+  function updateHeader(project) {
+    const header = document.getElementById('headerProject');
+    
+    if (!project) {
+      header.textContent = 'No project selected';
+      header.classList.add('empty');
+    } else {
+      header.textContent = project.name;
+      header.classList.remove('empty');
+    }
+  }
+  
+  // ─── MESSAGE HANDLER ───
+  window.onmessage = (event) => {
+    const msg = event.data.pluginMessage;
+    if (!msg) return;
+    
+    console.log('📨 UI received:', msg.type);
+    
+    if (msg.type === 'projects-loaded' || msg.type === 'init-complete') {
+      allProjects = msg.projects || [];
+      currentProject = msg.activeProject;
+      renderProjects(allProjects, currentProject);
+      renderGoals(currentProject);
+      renderFixes(currentProject);
+      updateHeader(currentProject);
+    }
+    
+    if (msg.type === 'project-created') {
+      allProjects = msg.allProjects;
+      currentProject = msg.project;
+      renderProjects(allProjects, currentProject);
+      updateHeader(currentProject);
+      
+      if (window.pendingGoals) {
+        parent.postMessage({ 
+          pluginMessage: { 
+            type: 'add-goals',
+            projectId: currentProject.id,
+            goals: window.pendingGoals.goals,
+            prdText: window.pendingGoals.prdText
+          } 
+        }, '*');
+        
+        window.pendingGoals = null;
+        
+        setTimeout(() => {
+          document.querySelector('[data-tab="goals"]').click();
+        }, 100);
+      }
+    }
+    
+    if (msg.type === 'project-deleted') {
+      allProjects = msg.allProjects;
+      currentProject = allProjects[0] || null;
+      renderProjects(allProjects, currentProject);
+      renderGoals(currentProject);
+      renderFixes(currentProject);
+      updateHeader(currentProject);
+    }
+    
+    if (msg.type === 'active-project-changed') {
+      currentProject = msg.project;
+      renderProjects(allProjects, currentProject);
+      renderGoals(currentProject);
+      renderFixes(currentProject);
+      updateHeader(currentProject);
+    }
+    
+    if (msg.type === 'goals-updated') {
+      const index = allProjects.findIndex(p => p.id === msg.project.id);
+      if (index !== -1) {
+        allProjects[index] = msg.project;
+      }
+      if (currentProject && currentProject.id === msg.project.id) {
+        currentProject = msg.project;
+      }
+      renderGoals(currentProject);
+      renderProjects(allProjects, currentProject);
+    }
+    
+    if (msg.type === 'goal-toggled') {
+      const index = allProjects.findIndex(p => p.id === msg.project.id);
+      if (index !== -1) {
+        allProjects[index] = msg.project;
+      }
+      if (currentProject && currentProject.id === msg.project.id) {
+        currentProject = msg.project;
+      }
+      renderGoals(currentProject);
+    }
+    
+    if (msg.type === 'fixes-updated') {
+      const index = allProjects.findIndex(p => p.id === msg.project.id);
+      if (index !== -1) {
+        allProjects[index] = msg.project;
+      }
+      if (currentProject && currentProject.id === msg.project.id) {
+        currentProject = msg.project;
+      }
+      renderFixes(currentProject);
+      renderProjects(allProjects, currentProject);
+    }
+    
+    if (msg.type === 'fix-marked-done') {
+      const index = allProjects.findIndex(p => p.id === msg.project.id);
+      if (index !== -1) {
+        allProjects[index] = msg.project;
+      }
+      if (currentProject && currentProject.id === msg.project.id) {
+        currentProject = msg.project;
+      }
+      renderFixes(currentProject);
+    }
+    
+    if (msg.type === 'error') {
+      console.error('Plugin error:', msg.message);
+    }
+    
+    if (msg.type === 'claude-data-ready') {
+      // Send data to bridge instead of copying to clipboard
+      if (bridgeSocket && bridgeSocket.readyState === WebSocket.OPEN) {
+        bridgeSocket.send(JSON.stringify({
+          type: 'design-data',
+          data: {
+            mode: msg.mode,
+            pageName: msg.pageName,
+            fileKey: msg.fileKey,
+            nodes: msg.data,
+            projectName: currentProject?.name || 'Unknown'
+          }
+        }));
+        
+        alert('📤 Design sent to Claude!\n\nNow tell Claude in chat:\n"Review my design against the PRD"');
+      } else {
+        alert('⚠️ Bridge not connected!\n\nStart the bridge server first.');
+      }
+    }
+    
+    if (msg.type === 'state-for-bridge') {
+      // Forward state to bridge
+      if (bridgeSocket && bridgeSocket.readyState === WebSocket.OPEN) {
+        bridgeSocket.send(JSON.stringify({
+          type: 'state-update',
+          projects: msg.projects,
+          activeProject: msg.activeProject
+        }));
+      }
+    }
+    
+    if (msg.type === 'bridge-status') {
+      updateConnectionIndicator(msg.connected);
+    }
+  };
+</script>
+
+</body>
+</html>
