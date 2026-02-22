@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * PRODUCT COPILOT BRIDGE SERVER
+ * SIDEBOT BRIDGE SERVER
  * Connects Figma Plugin ↔ Claude Desktop
  * Run: node bridge-server.js
  */
@@ -149,7 +149,7 @@ wss.on('connection', (ws) => {
 const httpServer = app.listen(PORT, () => {
   console.log('');
   console.log('═══════════════════════════════════════════');
-  console.log('🚀 PRODUCT COPILOT BRIDGE SERVER');
+  console.log('🤖 SIDEBOT BRIDGE SERVER');
   console.log('═══════════════════════════════════════════');
   console.log('');
   console.log(`📡 HTTP Server:      http://localhost:${PORT}`);
