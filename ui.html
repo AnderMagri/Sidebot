@@ -703,6 +703,88 @@ textarea {
 .tab-content::-webkit-scrollbar-thumb:hover {
   background: #4a4a4a;
 }
+
+/* ─── FIXES ACTION BUTTONS ─── */
+.fixes-actions-section {
+  background: #2a2a2a;
+  border: 1px solid #3a3a3a;
+  border-radius: 6px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.action-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+  background: #1a1a1a;
+  border: 1px solid #3a3a3a;
+  border-radius: 6px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.action-btn:hover {
+  background: #333;
+  border-color: #7B4FBE;
+  transform: translateY(-1px);
+}
+
+.action-btn-primary {
+  grid-column: 1 / -1;
+  background: #7B4FBE;
+  border-color: #7B4FBE;
+}
+
+.action-btn-primary:hover {
+  background: #6a3fa8;
+}
+
+.action-icon {
+  font-size: 16px;
+}
+
+.action-label {
+  flex: 1;
+}
+
+/* ─── CONFETTI ANIMATION ─── */
+@keyframes confetti-fall {
+  0% {
+    transform: translateY(-100vh) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+.confetti {
+  position: fixed;
+  width: 10px;
+  height: 10px;
+  z-index: 9999;
+  pointer-events: none;
+}
+
+.confetti-purple { background: #7B4FBE; }
+.confetti-yellow { background: #fbbf24; }
+.confetti-blue { background: #3b82f6; }
+.confetti-green { background: #10b981; }
+.confetti-pink { background: #ec4899; }
+
 </style>
 </head>
 <body>
@@ -725,8 +807,8 @@ textarea {
 <!-- Tabs -->
 <div class="tabs">
   <div class="tab active" data-tab="projects">📁 Projects</div>
-  <div class="tab" data-tab="goals">🎯 Goals</div>
   <div class="tab" data-tab="fixes">🔧 Fixes</div>
+  <div class="tab" data-tab="goals">🎯 Goals</div>
   <div class="tab" data-tab="settings">⚙️ Settings</div>
 </div>
 
@@ -802,13 +884,45 @@ Return format: {"projectName": "...", "goals": ["...", "..."]}</textarea>
 
 <!-- Fixes Tab -->
 <div class="tab-content" id="fixes-content">
-  <div class="fix-list" id="fixList"></div>
+  <!-- Action Buttons -->
+  <div class="fixes-actions-section">
+    <div class="section-title">🔍 Quick Actions</div>
+    <div class="section-desc">Select a frame, then click an action below</div>
+    
+    <div class="action-buttons">
+      <button class="action-btn" onclick="checkGrammar()">
+        <span class="action-icon">🔤</span>
+        <span class="action-label">Check Grammar</span>
+      </button>
+      
+      <button class="action-btn" onclick="checkAutoLayout()">
+        <span class="action-icon">📐</span>
+        <span class="action-label">Auto-layout</span>
+      </button>
+      
+      <button class="action-btn" onclick="checkContrast()">
+        <span class="action-icon">🎨</span>
+        <span class="action-label">Contrast</span>
+      </button>
+      
+      <button class="action-btn action-btn-primary" onclick="generalReview()">
+        <span class="action-icon">📋</span>
+        <span class="action-label">Full Review</span>
+      </button>
+    </div>
+  </div>
   
-  <div class="empty-state" id="fixesEmpty">
-    <div class="empty-icon">✅</div>
-    <div class="empty-text">
-      No fixes needed yet.<br>
-      Select a frame and ask Claude to review it.
+  <!-- Fixes List -->
+  <div class="fixes-list-section">
+    <div class="section-title" style="margin-top: 20px;">📝 Issues Found</div>
+    <div class="fix-list" id="fixList"></div>
+    
+    <div class="empty-state" id="fixesEmpty">
+      <div class="empty-icon">✅</div>
+      <div class="empty-text">
+        No issues found yet.<br>
+        Use quick actions above or ask Claude to review.
+      </div>
     </div>
   </div>
 </div>
@@ -845,9 +959,33 @@ Return format: {"projectName": "...", "goals": ["...", "..."]}</textarea>
     <div class="settings-header">⌨️ Keyboard Shortcuts</div>
     <div class="keyboard-shortcuts">
       <span class="key">1</span> <span>Projects</span>
-      <span class="key">2</span> <span>Goals</span>
-      <span class="key">3</span> <span>Fixes</span>
+      <span class="key">2</span> <span>Fixes</span>
+      <span class="key">3</span> <span>Goals</span>
       <span class="key">4</span> <span>Settings</span>
+    </div>
+  </div>
+  
+  <div class="settings-section">
+    <div class="settings-header">🔌 Figma Desktop Bridge (Optional)</div>
+    <div class="settings-description">
+      For advanced users: Enable direct file reading by Claude
+    </div>
+    <div class="help-text">
+      <strong>What it does:</strong><br>
+      Allows Claude to read your Figma files directly without copy/paste<br><br>
+      
+      <strong>How to install:</strong><br>
+      1. Open Claude Desktop → Settings → Connectors<br>
+      2. Find "Figma" and click Connect<br>
+      3. In Figma: Right-click → Plugins → Development → Figma Desktop Bridge<br>
+      4. Click Run<br><br>
+      
+      <strong>When enabled, Claude can:</strong><br>
+      • Read your designs automatically<br>
+      • Analyze multiple frames at once<br>
+      • Check consistency across screens<br><br>
+      
+      ⚠️ This is separate from the Sidebot Bridge server
     </div>
   </div>
   
@@ -1068,7 +1206,7 @@ Return format: {"projectName": "...", "goals": ["...", "..."]}</textarea>
   document.addEventListener('keydown', (e) => {
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
     
-    const keys = { '1': 'projects', '2': 'goals', '3': 'fixes', '4': 'settings' };
+    const keys = { '1': 'projects', '2': 'fixes', '3': 'goals', '4': 'settings' };
     if (keys[e.key]) {
       document.querySelector('[data-tab="' + keys[e.key] + '"]').click();
     }
@@ -1246,6 +1384,97 @@ Return format: {"projectName": "...", "goals": ["...", "..."]}</textarea>
     ).join('');
   }
   
+  // ─── CONFETTI ANIMATION ───
+  function triggerConfetti() {
+    const colors = ['purple', 'yellow', 'blue', 'green', 'pink'];
+    const confettiCount = 50;
+    
+    for (let i = 0; i < confettiCount; i++) {
+      setTimeout(() => {
+        const confetti = document.createElement('div');
+        confetti.className = 'confetti confetti-' + colors[Math.floor(Math.random() * colors.length)];
+        confetti.style.left = Math.random() * 100 + '%';
+        confetti.style.animation = 'confetti-fall ' + (2 + Math.random() * 2) + 's linear';
+        document.body.appendChild(confetti);
+        
+        setTimeout(() => confetti.remove(), 4000);
+      }, i * 30);
+    }
+  }
+  
+  // ─── ACTION BUTTON FUNCTIONS ───
+  function checkGrammar() {
+    const selection = figma.currentPage?.selection;
+    if (!selection || selection.length === 0) {
+      alert('Please select a frame or text layer first!');
+      return;
+    }
+    
+    parent.postMessage({ 
+      pluginMessage: { 
+        type: 'send-to-claude',
+        mode: 'selection',
+        action: 'grammar'
+      } 
+    }, '*');
+    
+    alert('📋 Copy the data below and paste in Claude Desktop:\n\n"Check grammar and spelling in my selected design"');
+  }
+  
+  function checkAutoLayout() {
+    const selection = figma.currentPage?.selection;
+    if (!selection || selection.length === 0) {
+      alert('Please select a frame first!');
+      return;
+    }
+    
+    parent.postMessage({ 
+      pluginMessage: { 
+        type: 'send-to-claude',
+        mode: 'selection',
+        action: 'autolayout'
+      } 
+    }, '*');
+    
+    alert('📋 Copy the data below and paste in Claude Desktop:\n\n"Check auto-layout setup and suggest improvements"');
+  }
+  
+  function checkContrast() {
+    const selection = figma.currentPage?.selection;
+    if (!selection || selection.length === 0) {
+      alert('Please select a frame first!');
+      return;
+    }
+    
+    parent.postMessage({ 
+      pluginMessage: { 
+        type: 'send-to-claude',
+        mode: 'selection',
+        action: 'contrast'
+      } 
+    }, '*');
+    
+    alert('📋 Copy the data below and paste in Claude Desktop:\n\n"Check color contrast ratios for accessibility (WCAG AA)"');
+  }
+  
+  function generalReview() {
+    const selection = figma.currentPage?.selection;
+    if (!selection || selection.length === 0) {
+      alert('Please select a frame first!');
+      return;
+    }
+    
+    parent.postMessage({ 
+      pluginMessage: { 
+        type: 'send-to-claude',
+        mode: 'selection',
+        action: 'review'
+      } 
+    }, '*');
+    
+    alert('📋 Copy the data below and paste in Claude Desktop:\n\n"Review my design against the PRD requirements"');
+  }
+  
   function renderGoals(project) {
     const list = document.getElementById('goalList');
     const empty = document.getElementById('goalsEmpty');
@@ -1280,6 +1509,11 @@ Return format: {"projectName": "...", "goals": ["...", "..."]}</textarea>
     
     progress.textContent = doneCount + '/' + total + ' complete (' + percent + '%)';
     fill.style.width = percent + '%';
+    
+    // 🎉 CONFETTI when 100% complete!
+    if (percent === 100 && doneCount > 0) {
+      setTimeout(() => triggerConfetti(), 300);
+    }
     
     list.innerHTML = project.goals.map(g =>
       '<div class="goal-item ' + (g.status === 'done' ? 'done' : '') + '" onclick="toggleGoal(\'' + g.id + '\')">' +
