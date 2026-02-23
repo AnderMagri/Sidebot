@@ -12,18 +12,14 @@ No more copy/paste! Real-time communication via localhost bridge.
 
 Go to the [Releases page](https://github.com/AnderMagri/Sidebot/releases) and download the file for your platform.
 
-### Mac (Apple Silicon — M1/M2/M3/M4)
+### Mac (all models — M1/M2/M3/M4 and Intel)
 
-1. Download `sidebot-bridge-mac-arm64`
-2. Download `sidebot-bridge-mac.command`
-3. Put **both files in the same folder** (Desktop works great)
-4. Double-click `sidebot-bridge-mac.command`
-5. **First time only:** macOS asks to confirm → click **"Open"**
+1. Download `SidebotBridge-mac.zip`
+2. Double-click the zip to extract — you get `SidebotBridge.app`
+3. Put `SidebotBridge.app` anywhere — Desktop works great
+4. Double-click `SidebotBridge.app`
+5. **First time only:** macOS asks to confirm → right-click → **"Open"** → **"Open"**
 6. Terminal opens and the bridge starts ✅
-
-### Mac (Intel)
-
-Same steps as above, but download `sidebot-bridge-mac-x64` instead of `arm64`.
 
 ### Windows
 
@@ -106,7 +102,7 @@ Another instance may be running. Close it and try again, or restart your compute
 
 ### Mac: "cannot be opened because it is from an unidentified developer"
 
-Right-click `sidebot-bridge-mac.command` → **Open** → **Open** again in the dialog. This only happens the first time.
+Right-click `SidebotBridge.app` → **Open** → **Open** again in the dialog. This only happens the first time.
 
 ### Windows: SmartScreen blocks the .exe
 
@@ -149,12 +145,10 @@ bridge/
 └── README.md                     # This file
 ```
 
-Binaries (built by CI, not committed to git):
+Release assets (built by CI, not committed to git):
 ```
-bridge/dist/
-├── sidebot-bridge-mac-arm64      # Mac Apple Silicon standalone
-├── sidebot-bridge-mac-x64        # Mac Intel standalone
-└── sidebot-bridge-win-x64.exe    # Windows standalone
+SidebotBridge-mac.zip             # Mac app (works on all Macs — M1/M2/M3/M4 and Intel)
+sidebot-bridge-win-x64.exe        # Windows standalone
 ```
 
 ---

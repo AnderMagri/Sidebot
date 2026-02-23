@@ -40,12 +40,63 @@ jobs:
           mv dist/sidebot-bridge-macos-arm64 dist/sidebot-bridge-mac-arm64
           mv dist/sidebot-bridge-macos-x64   dist/sidebot-bridge-mac-x64
 
+      - name: Build Mac .app bundle
+        working-directory: bridge
+        run: |
+          # Create .app structure
+          mkdir -p SidebotBridge.app/Contents/MacOS
+          mkdir -p SidebotBridge.app/Contents/Resources
+
+          # Copy both Mac binaries inside the app
+          cp dist/sidebot-bridge-mac-arm64 SidebotBridge.app/Contents/Resources/
+          cp dist/sidebot-bridge-mac-x64   SidebotBridge.app/Contents/Resources/
+
+          # Create the launcher script (detects arch, opens Terminal, runs bridge)
+          cat > SidebotBridge.app/Contents/MacOS/SidebotBridge << 'LAUNCHER'
+          #!/bin/bash
+          ARCH=$(uname -m)
+          DIR="$(cd "$(dirname "$0")" && pwd)"
+          if [ "$ARCH" = "arm64" ]; then
+            BINARY="$DIR/../Resources/sidebot-bridge-mac-arm64"
+          else
+            BINARY="$DIR/../Resources/sidebot-bridge-mac-x64"
+          fi
+          chmod +x "$BINARY"
+          osascript -e "tell application \"Terminal\" to do script \"'$BINARY'\""
+          LAUNCHER
+          chmod +x SidebotBridge.app/Contents/MacOS/SidebotBridge
+
+          # Create Info.plist
+          cat > SidebotBridge.app/Contents/Info.plist << 'PLIST'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>CFBundleExecutable</key>
+            <string>SidebotBridge</string>
+            <key>CFBundleIdentifier</key>
+            <string>com.andermagri.sidebot-bridge</string>
+            <key>CFBundleName</key>
+            <string>Sidebot Bridge</string>
+            <key>CFBundlePackageType</key>
+            <string>APPL</string>
+            <key>CFBundleShortVersionString</key>
+            <string>1.0</string>
+            <key>LSMinimumSystemVersion</key>
+            <string>10.13</string>
+          </dict>
+          </plist>
+          PLIST
+
+          # Zip the .app (standard Mac distribution method)
+          zip -r SidebotBridge-mac.zip SidebotBridge.app
+          echo "Mac app bundle:"
+          ls -lh SidebotBridge-mac.zip
+
       - name: Create GitHub Release with binaries
         uses: softprops/action-gh-release@v2
         with:
           generate_release_notes: true
           files: |
-            bridge/dist/sidebot-bridge-mac-arm64
-            bridge/dist/sidebot-bridge-mac-x64
+            bridge/SidebotBridge-mac.zip
             bridge/dist/sidebot-bridge-win-x64.exe
-            bridge/sidebot-bridge-mac.command
