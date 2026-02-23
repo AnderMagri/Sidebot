@@ -1,0 +1,14 @@
+# Bridge build output
+bridge/dist/
+
+# Node dependencies
+bridge/node_modules/
+node_modules/
+
+# macOS
+.DS_Store
+**/.DS_Store
+
+# Editor
+.vscode/
+.idea/

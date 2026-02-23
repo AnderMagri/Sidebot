@@ -1,0 +1,45 @@
+name: Build and Release Bridge
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install bridge dependencies
+        working-directory: bridge
+        run: npm install
+
+      - name: Build standalone binaries
+        working-directory: bridge
+        run: |
+          npx @yao-pkg/pkg . \
+            --targets node22-macos-arm64,node22-macos-x64,node22-win-x64 \
+            --out-path dist
+          echo "Built files:"
+          ls -lh dist/
+
+      - name: Create GitHub Release with binaries
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: |
+            bridge/dist/sidebot-bridge-mac-arm64
+            bridge/dist/sidebot-bridge-mac-x64
+            bridge/dist/sidebot-bridge-win-x64.exe
+            bridge/sidebot-bridge-mac.command

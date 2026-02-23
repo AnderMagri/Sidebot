@@ -6,314 +6,157 @@ No more copy/paste! Real-time communication via localhost bridge.
 
 ---
 
-## 🚀 Quick Start
+## Download & Run (Recommended)
 
-### 1. Install Dependencies
+> No Node.js required. Just download and double-click.
+
+Go to the [Releases page](../../releases) and download the file for your platform.
+
+### Mac (Apple Silicon — M1/M2/M3/M4)
+
+1. Download `sidebot-bridge-mac-arm64`
+2. Download `sidebot-bridge-mac.command`
+3. Put **both files in the same folder** (Desktop works great)
+4. Double-click `sidebot-bridge-mac.command`
+5. **First time only:** macOS asks to confirm → click **"Open"**
+6. Terminal opens and the bridge starts ✅
+
+### Mac (Intel)
+
+Same steps as above, but download `sidebot-bridge-mac-x64` instead of `arm64`.
+
+### Windows
+
+1. Download `sidebot-bridge-win-x64.exe`
+2. Put it anywhere — Desktop is fine
+3. Double-click the `.exe`
+4. **First time only:** Windows SmartScreen warning → click **"More info"** then **"Run anyway"**
+5. Command Prompt opens and the bridge starts ✅
+
+### Stop the Bridge
+
+Close the Terminal / Command Prompt window. That's it.
+
+---
+
+## Developer Setup (Node.js required)
+
+If you want to run from source or contribute:
 
 ```bash
+# Install dependencies
 npm install
-```
 
-### 2. Start Bridge Server
-
-**Mac/Linux:**
-```bash
-./start.sh
-```
-
-**Windows:**
-```
-start.bat
-```
-
-**Or manually:**
-```bash
+# Start bridge
 npm start
+
+# Development mode (auto-reload)
+npm run dev
 ```
 
-### 3. Open Figma Plugin
+### Build standalone binaries locally
 
-1. Open Figma
-2. Run: `Plugins → Development → Sidebot`
-3. Watch the connection indicator turn **🟢 green**
+```bash
+# Install pkg
+npm install
 
-### 4. Talk to Claude!
+# Build for your current platform
+npm run build:mac-arm64   # Apple Silicon Mac
+npm run build:mac-x64     # Intel Mac
+npm run build:win         # Windows
 
+# Build all platforms at once
+npm run build
 ```
-You: "Review my design against the test PRD"
-Claude: *automatically fetches your design*
-Claude: *sends fixes directly to plugin*
-You: *fixes appear in Fixes tab automatically*
-```
 
-**NO COPY/PASTE!** 🎉
+Binaries appear in `bridge/dist/`.
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ```
-┌──────────────┐         ┌──────────────┐         ┌─────────────────┐
-│ Figma Plugin │◄───────►│ Bridge Server│◄───────►│ Claude Desktop  │
-│              │ WebSocket│ localhost    │   HTTP  │ (Chat Interface)│
-│  - Sends data│         │ - Port 3000  │         │ - Analyzes data │
-│  - Gets fixes│         │ - Port 3001  │         │ - Sends commands│
-└──────────────┘         └──────────────┘         └─────────────────┘
++----------------+         +----------------+         +-----------------+
+| Figma Plugin   |<------->| Bridge Server  |<------->| Claude Desktop  |
+|                | WebSocket| localhost      |   HTTP  | (Chat Interface)|
+|  - Sends data  |         | - Port 3000    |         | - Analyzes data |
+|  - Gets fixes  |         | - Port 3001    |         | - Sends commands|
++----------------+         +----------------+         +-----------------+
 ```
 
-### Bridge Server Endpoints:
+### Endpoints (for Claude)
 
-**HTTP (for Claude):**
-- `GET /health` - Server status
-- `GET /state` - Current plugin state
-- `GET /design-data` - Latest design data from plugin
-- `POST /add-goals` - Send goals to plugin
-- `POST /add-fixes` - Send fixes to plugin
+**HTTP on port 3000:**
+- `GET /health` — Server status
+- `GET /state` — Current plugin state
+- `GET /design-data` — Latest design data from plugin
+- `POST /add-goals` — Send goals to plugin
+- `POST /add-fixes` — Send fixes to plugin
 
-**WebSocket (for Plugin):**
-- `ws://localhost:3001` - Real-time bidirectional communication
+**WebSocket on port 3001:**
+- `ws://localhost:3001` — Real-time plugin connection
 
 ---
 
-## 🎯 Usage Examples
+## Troubleshooting
 
-### Send Design for Review
+### Bridge won't start — "port already in use"
 
-**In Figma:**
-1. Select a frame
-2. Click "📍 Selection" in Goals tab
-3. Alert: "Design sent to Claude!"
+Another instance may be running. Close it and try again, or restart your computer.
 
-**In Claude Desktop Chat:**
-```
-You: "Review my design against the test PRD"
-```
+### Mac: "cannot be opened because it is from an unidentified developer"
 
-**Claude automatically:**
-1. Fetches design from bridge (`GET /design-data`)
-2. Analyzes against PRD
-3. Sends fixes to bridge (`POST /add-fixes`)
-4. Fixes appear in plugin instantly! ✨
+Right-click `sidebot-bridge-mac.command` → **Open** → **Open** again in the dialog. This only happens the first time.
 
----
+### Windows: SmartScreen blocks the .exe
 
-### Add New Project + Goals
+Click **"More info"** → **"Run anyway"**. This only happens the first time.
 
-**In Claude Desktop Chat:**
-```
-You: "Add this PRD to Sidebot:
+### Plugin LED stays red after bridge starts
 
-BACKGROUND: Clean white
-PRIMARY COLOR: Teal #14B8A6
-REQUIRED ELEMENTS:
-- Header with logo
-- Balance card
-- Quick actions
-- Transaction list
-- Bottom navigation"
-```
+1. Restart the Sidebot plugin in Figma (close and reopen it)
+2. Hit ↻ Refresh in the Settings tab
+3. Check the bridge terminal shows no errors
 
-**Claude automatically:**
-1. Analyzes PRD
-2. Sends goals to bridge (`POST /add-goals`)
-3. Goals appear in plugin instantly! ✨
+### Check bridge is running
 
----
-
-## 🔧 How Claude Talks to Bridge
-
-### From This Chat Window
-
-I (Claude) can make HTTP requests to your localhost bridge:
-
-```javascript
-// Example: Add goals
-fetch('http://localhost:3000/add-goals', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    projectName: "test",
-    goals: ["Goal 1", "Goal 2"],
-    prdText: "..."
-  })
-})
-```
-
-```javascript
-// Example: Get design data
-fetch('http://localhost:3000/design-data')
-  .then(res => res.json())
-  .then(data => {
-    // Analyze data.nodes
-    // Send fixes back
-  })
-```
-
----
-
-## 🟢 Connection Status
-
-**In Plugin Header:**
-- 🟢 **Claude** - Connected and ready
-- 🔴 **Offline** - Bridge not running
-
-**Check Bridge Status:**
 ```bash
 curl http://localhost:3000/health
 ```
 
-Response:
-```json
-{
-  "status": "ok",
-  "pluginConnected": true,
-  "activeProject": "test",
-  "timestamp": "2026-02-20T..."
-}
-```
+Should return: `{"status":"ok","pluginConnected":true,...}`
 
 ---
 
-## 🐛 Troubleshooting
+## Security
 
-### Plugin Says "Bridge not connected"
-
-1. **Is bridge server running?**
-   ```bash
-   curl http://localhost:3000/health
-   ```
-   
-2. **Check ports are free:**
-   ```bash
-   lsof -i :3000
-   lsof -i :3001
-   ```
-
-3. **Restart bridge server:**
-   ```bash
-   # Ctrl+C to stop
-   ./start.sh  # Start again
-   ```
-
-4. **Restart plugin:**
-   - Close plugin in Figma
-   - Reopen plugin
-   - Wait for 🟢 connection
-
-### Claude Can't Send Commands
-
-1. **Network access enabled?**
-   - Check Claude.ai settings allow localhost
-
-2. **Correct URLs?**
-   - HTTP: `http://localhost:3000`
-   - WebSocket: `ws://localhost:3001`
-
-3. **CORS errors?**
-   - Bridge has CORS enabled for all origins
-   - Check browser console
-
-### Connection Keeps Dropping
-
-1. **Firewall blocking localhost?**
-   - Allow Node.js through firewall
-
-2. **Port conflict?**
-   - Change ports in `bridge-server.js`:
-   ```javascript
-   const PORT = 3000;      // HTTP
-   const WS_PORT = 3001;   // WebSocket
-   ```
-
----
-
-## 🔒 Security Notes
-
-- Bridge only accepts connections from **localhost**
-- No external network access required
+- Bridge only listens on **localhost** — no external access
 - All data stays on your machine
-- Bridge can't access internet
-- Plugin can't make external requests
-
-**Safe for sensitive projects!** ✅
+- No external network calls
+- Safe for sensitive projects ✅
 
 ---
 
-## 📝 Technical Details
+## What's Included
 
-**Dependencies:**
-- `express` - HTTP server for Claude
-- `ws` - WebSocket server for plugin
-
-**Data Flow:**
-
-1. **Plugin → Bridge:**
-   - WebSocket connection on port 3001
-   - Sends state updates, design data
-   
-2. **Claude → Bridge:**
-   - HTTP requests to port 3000
-   - Sends goals, fixes, commands
-
-3. **Bridge → Plugin:**
-   - WebSocket messages
-   - Forwards Claude's commands
-
----
-
-## 🚀 Advanced Usage
-
-### Custom Commands
-
-You can extend the bridge with custom endpoints:
-
-```javascript
-// In bridge-server.js
-app.post('/custom-command', (req, res) => {
-  const { data } = req.body;
-  
-  pluginSocket.send(JSON.stringify({
-    type: 'custom-command',
-    data
-  }));
-  
-  res.json({ success: true });
-});
+```
+bridge/
+├── bridge-server.js              # Main server (Node.js source)
+├── package.json                  # Dependencies + build config
+├── sidebot-bridge-mac.command    # Mac double-click launcher
+├── start.sh                      # Mac/Linux developer launcher
+├── start.bat                     # Windows developer launcher
+└── README.md                     # This file
 ```
 
-### Logging
-
-Bridge logs all messages to console:
+Binaries (built by CI, not committed to git):
 ```
-📥 Claude sending 5 goals to project: test
-📨 From plugin: design-data
-💾 Design data stored: selection
+bridge/dist/
+├── sidebot-bridge-mac-arm64      # Mac Apple Silicon standalone
+├── sidebot-bridge-mac-x64        # Mac Intel standalone
+└── sidebot-bridge-win-x64.exe    # Windows standalone
 ```
 
 ---
 
-## 📦 What's Included
-
-```
-sidebot-bridge/
-├── bridge-server.js    # Main server
-├── package.json        # Dependencies
-├── start.sh           # Mac/Linux startup
-├── start.bat          # Windows startup
-└── README.md          # This file
-```
-
----
-
-## 🎓 Learn More
-
-**Video Tutorial:** [Coming Soon]
-
-**Discord:** [Coming Soon]
-
-**Issues:** Report bugs via GitHub
-
----
-
-**Built with ❤️ for seamless AI-powered design workflows**
-
+**Built with love for seamless AI-powered design workflows**

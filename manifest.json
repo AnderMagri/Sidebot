@@ -6,7 +6,7 @@
   "ui": "ui.html",
   "editorType": ["figma"],
   "networkAccess": {
-    "allowedDomains": ["none"],
-    "reasoning": "Plugin communicates with Claude Desktop via optional bridge server - no external network needed"
+    "allowedDomains": ["ws://localhost:3001", "http://localhost:3000"],
+    "reasoning": "Plugin communicates with Claude Desktop via local Bridge server (WebSocket on port 3001, HTTP on port 3000)"
   }
 }

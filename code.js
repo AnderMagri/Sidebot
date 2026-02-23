@@ -444,12 +444,164 @@ figma.ui.onmessage = async (msg) => {
       });
       
       console.log('Selection data prepared for Claude');
-      
+
     } catch (e) {
       figma.ui.postMessage({ type: 'error', message: e.message });
     }
   }
+
+  // ─── NOTIFY ───
+  if (msg.type === 'notify') {
+    figma.notify(msg.message || '');
+  }
+
+  // ─── APPLY TEXT FIX ───
+  if (msg.type === 'apply-text-fix') {
+    try {
+      const node = figma.getNodeById(msg.nodeId);
+      if (node && node.type === 'TEXT') {
+        await figma.loadFontAsync(node.fontName);
+        node.characters = msg.correctedText;
+        figma.notify('✓ Text updated');
+      } else {
+        // Fallback: search all text nodes on current page
+        let found = false;
+        function searchText(nodes) {
+          for (const n of nodes) {
+            if (n.type === 'TEXT' && n.characters === msg.originalText) {
+              figma.loadFontAsync(n.fontName).then(() => { n.characters = msg.correctedText; });
+              found = true;
+              break;
+            }
+            if ('children' in n) searchText(n.children);
+          }
+        }
+        searchText(figma.currentPage.children);
+        figma.notify(found ? '✓ Text updated' : '⚠️ Node not found — select it and try again');
+      }
+    } catch (e) {
+      figma.notify('⚠️ Could not apply fix: ' + e.message);
+    }
+  }
+
+  // ─── ANNOTATE NODE ───
+  if (msg.type === 'annotate-node') {
+    try {
+      const target = figma.getNodeById(msg.nodeId);
+      const page   = figma.currentPage;
+
+      // Determine position: near target node, or at viewport center
+      let x = 100, y = 100;
+      if (target && 'absoluteBoundingBox' in target && target.absoluteBoundingBox) {
+        x = target.absoluteBoundingBox.x + target.absoluteBoundingBox.width + 16;
+        y = target.absoluteBoundingBox.y;
+      }
+
+      const colors = { autolayout: { r:0.23, g:0.51, b:0.96 }, alignment: { r:0.55, g:0.36, b:0.96 }, contrast: { r:0.98, g:0.60, b:0.09 } };
+      const color  = colors[msg.actionType] || { r:0.23, g:0.51, b:0.96 };
+
+      // Annotation frame
+      const frame = figma.createFrame();
+      frame.name = '📌 ' + (msg.actionType || 'Annotation');
+      frame.resize(220, 60);
+      frame.x = x;
+      frame.y = y;
+      frame.fills = [{ type: 'SOLID', color, opacity: 0.12 }];
+      frame.strokes = [{ type: 'SOLID', color }];
+      frame.strokeWeight = 1.5;
+      frame.cornerRadius = 6;
+      frame.layoutMode = 'VERTICAL';
+      frame.paddingLeft = frame.paddingRight = 10;
+      frame.paddingTop  = frame.paddingBottom = 8;
+      frame.itemSpacing = 4;
+
+      // Label
+      const label = figma.createText();
+      await figma.loadFontAsync({ family: 'Inter', style: 'Bold' });
+      label.fontName = { family: 'Inter', style: 'Bold' };
+      label.characters = (msg.actionType || 'Issue').toUpperCase();
+      label.fontSize = 9;
+      label.fills = [{ type: 'SOLID', color }];
+      frame.appendChild(label);
+
+      // Description
+      const desc = figma.createText();
+      await figma.loadFontAsync({ family: 'Inter', style: 'Regular' });
+      desc.fontName = { family: 'Inter', style: 'Regular' };
+      desc.characters = (msg.description || 'See plugin for details').slice(0, 120);
+      desc.fontSize = 10;
+      desc.fills = [{ type: 'SOLID', color: { r:1, g:1, b:1 } }];
+      desc.textAutoResize = 'HEIGHT';
+      frame.appendChild(desc);
+
+      // Resize frame to fit text
+      frame.primaryAxisSizingMode = 'AUTO';
+      page.appendChild(frame);
+
+      figma.notify('📌 Annotation added to canvas');
+    } catch (e) {
+      figma.notify('⚠️ Annotation failed: ' + e.message);
+    }
+  }
+
+  // ─── RENAME LAYERS ───
+  if (msg.type === 'rename-layers') {
+    try {
+      const targets = figma.currentPage.selection.length > 0
+        ? [...figma.currentPage.selection]
+        : [...figma.currentPage.children];
+
+      let count = 0;
+
+      function walk(nodes) {
+        for (const node of nodes) {
+          if (msg.renameType === 'from-content') {
+            if (node.type === 'TEXT' && node.characters) {
+              node.name = node.characters.slice(0, 40).trim();
+              count++;
+            }
+          } else if (msg.renameType === 'clean') {
+            const cleaned = node.name
+              .replace(/^(Copy of\s+)+/gi, '')
+              .replace(/\s+\d+$/, '')
+              .replace(/\s{2,}/g, ' ')
+              .trim();
+            if (cleaned && cleaned !== node.name) { node.name = cleaned; count++; }
+          } else if (msg.renameType === 'by-type') {
+            const typeMap = { FRAME: 'Frame', GROUP: 'Group', TEXT: 'Label', RECTANGLE: 'Rectangle', ELLIPSE: 'Ellipse', VECTOR: 'Icon', COMPONENT: 'Component', INSTANCE: 'Instance', IMAGE: 'Image' };
+            const mapped = typeMap[node.type];
+            if (mapped) { node.name = mapped; count++; }
+          }
+          if ('children' in node && msg.renameType !== 'number') walk(node.children);
+        }
+      }
+
+      if (msg.renameType === 'number') {
+        targets.forEach((node, i) => {
+          const base = node.name.replace(/^\d+\s*[—–-]\s*/, '').trim();
+          node.name = String(i + 1).padStart(2, '0') + ' — ' + base;
+          count++;
+        });
+      } else {
+        walk(targets);
+      }
+
+      figma.notify('✓ Renamed ' + count + ' layer' + (count !== 1 ? 's' : ''));
+      figma.ui.postMessage({ type: 'rename-done', count });
+    } catch (e) {
+      figma.notify('⚠️ Rename failed: ' + e.message);
+    }
+  }
 };
+
+// ─── SELECTION CHANGE → notify UI ───
+figma.on('selectionchange', () => {
+  const sel = figma.currentPage.selection;
+  figma.ui.postMessage({
+    type: 'selection-changed',
+    count: sel.length
+  });
+});
 
 // ─── EXPOSE PLUGIN DATA TO CLAUDE VIA COMMENTS ───
 // Claude can read plugin data through special comment markers

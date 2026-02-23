@@ -785,6 +785,477 @@ textarea {
 .confetti-green { background: #10b981; }
 .confetti-pink { background: #ec4899; }
 
+/* ─── ARCHITECTURE DIAGRAM ─── */
+.arch-flow {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 10px 0;
+}
+.arch-node {
+  flex: 1;
+  background: #2a2a2a;
+  border: 1px solid #3a3a3a;
+  border-radius: 6px;
+  padding: 8px 4px;
+  text-align: center;
+}
+.arch-node.highlight { border-color: #7B4FBE; }
+.arch-node-icon { font-size: 16px; margin-bottom: 2px; }
+.arch-node-name { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; }
+.arch-node-sub { font-size: 8px; opacity: 0.45; margin-top: 1px; }
+.arch-arrow { font-size: 13px; opacity: 0.35; flex-shrink: 0; }
+.arch-mcp-row {
+  background: #222;
+  border: 1px dashed #444;
+  border-radius: 4px;
+  padding: 6px 10px;
+  font-size: 9px;
+  opacity: 0.65;
+  text-align: center;
+  margin-top: 4px;
+  line-height: 1.5;
+}
+
+/* ─── LED STATUS PANEL ─── */
+.led-panel {
+  background: #2a2a2a;
+  border: 1px solid #3a3a3a;
+  border-radius: 6px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.led-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.led {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.led.green {
+  background: #4ade80;
+  box-shadow: 0 0 7px #4ade8088;
+  animation: led-pulse 2s infinite;
+}
+.led.red {
+  background: #ff6b6b;
+  box-shadow: 0 0 7px #ff6b6b88;
+}
+.led.amber {
+  background: #fbbf24;
+  box-shadow: 0 0 7px #fbbf2466;
+}
+.led.gray { background: #555; }
+@keyframes led-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+.led-info { flex: 1; }
+.led-name { font-size: 11px; font-weight: 600; }
+.led-status { font-size: 10px; opacity: 0.55; margin-top: 1px; }
+
+.btn-refresh {
+  background: none;
+  border: 1px solid #3a3a3a;
+  color: #7B4FBE;
+  font-size: 10px;
+  cursor: pointer;
+  padding: 3px 8px;
+  border-radius: 4px;
+  transition: all 0.15s;
+}
+.btn-refresh:hover { background: #3a3a3a; }
+
+/* ─── TROUBLESHOOTING CHAT ─── */
+.chat-widget {
+  background: #2a2a2a;
+  border: 1px solid #3a3a3a;
+  border-radius: 6px;
+  overflow: hidden;
+}
+.chat-messages {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+.chat-messages::-webkit-scrollbar { width: 4px; }
+.chat-messages::-webkit-scrollbar-track { background: transparent; }
+.chat-messages::-webkit-scrollbar-thumb { background: #444; border-radius: 2px; }
+.chat-msg {
+  max-width: 88%;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 11px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+.chat-msg.bot {
+  background: #383838;
+  align-self: flex-start;
+  border-bottom-left-radius: 2px;
+}
+.chat-msg.user {
+  background: #7B4FBE;
+  align-self: flex-end;
+  border-bottom-right-radius: 2px;
+}
+.chat-options {
+  border-top: 1px solid #3a3a3a;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.chat-opt-btn {
+  width: 100%;
+  padding: 7px 10px;
+  background: #1a1a1a;
+  border: 1px solid #3a3a3a;
+  border-radius: 4px;
+  color: #ccc;
+  font-size: 10px;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.chat-opt-btn:hover { background: #333; border-color: #7B4FBE; color: #fff; }
+
+/* ─── ADD PROJECT AREA (dynamic) ─── */
+.add-project-claude-block {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.btn-ask-claude {
+  width: 100%;
+  padding: 12px 14px;
+  background: #7B4FBE;
+  border: none;
+  border-radius: 6px;
+  color: #fff;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-ask-claude:hover { background: #6a3fa8; transform: translateY(-1px); }
+.ask-claude-label { font-size: 10px; opacity: 0.75; margin-bottom: 4px; }
+.ask-claude-prompt {
+  font-size: 11px;
+  font-family: monospace;
+  background: rgba(0,0,0,0.25);
+  padding: 4px 8px;
+  border-radius: 3px;
+  letter-spacing: 0.2px;
+}
+.ask-claude-copy-hint { font-size: 9px; opacity: 0.45; margin-top: 5px; }
+.btn-add-manual {
+  width: 100%;
+  padding: 9px;
+  background: none;
+  border: 1px dashed #3a3a3a;
+  border-radius: 6px;
+  color: #666;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-add-manual:hover { border-color: #555; color: #aaa; background: #2a2a2a; }
+.btn-ask-claude-ghost {
+  width: 100%;
+  padding: 9px;
+  background: none;
+  border: 1px dashed #3a3a3a;
+  border-radius: 6px;
+  color: #555;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+.btn-ask-claude-ghost:hover { border-color: #7B4FBE55; color: #888; }
+.bridge-nudge {
+  font-size: 10px;
+  color: #fbbf24;
+  text-align: center;
+  padding: 5px 0 2px;
+  animation: fadeIn 0.2s;
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* ─── FIXES TAB: CONVERSATION LAYOUT ─── */
+#fixes-content { display: none; }
+#fixes-content.active {
+  display: flex !important;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0;
+}
+.results-area {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.results-area::-webkit-scrollbar { width: 4px; }
+.results-area::-webkit-scrollbar-track { background: #1a1a1a; }
+.results-area::-webkit-scrollbar-thumb { background: #3a3a3a; border-radius: 2px; }
+
+/* Quick Actions bottom bar */
+.quick-actions-bar {
+  flex-shrink: 0;
+  display: flex;
+  gap: 8px;
+  padding: 10px 12px;
+  background: #222;
+  border-top: 1px solid #3a3a3a;
+}
+.qa-bar-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 8px 10px;
+  background: #7B4FBE;
+  border: none;
+  border-radius: 6px;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.qa-bar-btn:hover { background: #6a3fa8; }
+.qa-clear-btn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #2a2a2a;
+  border: 1px solid #3a3a3a;
+  border-radius: 6px;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+  animation: fadeIn 0.15s ease;
+}
+.qa-clear-btn:hover { border-color: #ff6b6b; background: #3d1a1a; }
+.qa-cancel-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 10px 14px;
+  background: #3d1a1a;
+  border: 1px solid #ff6b6b44;
+  border-radius: 6px;
+  color: #ff6b6b;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+  animation: fadeIn 0.15s ease;
+}
+.qa-cancel-btn:hover { background: #5a2a2a; border-color: #ff6b6b88; }
+
+/* Result item error variant */
+.result-item.error { border-left: 3px solid #ff6b6b; }
+
+/* Action tiles grid in bottom sheet */
+.action-tiles-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.action-tile {
+  background: #2a2a2a;
+  border: 1px solid #3a3a3a;
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.action-tile:hover { border-color: #7B4FBE; background: #333; transform: translateY(-1px); }
+.action-tile:active { transform: translateY(0); }
+.action-tile-icon { font-size: 20px; flex-shrink: 0; }
+.action-tile-name { font-size: 11px; font-weight: 600; }
+.action-tile-desc { font-size: 9px; opacity: 0.45; margin-top: 2px; }
+
+/* Rename section — below the action grid */
+.rename-section {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #2e2e2e;
+}
+.rename-section-title {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  opacity: 0.35;
+  margin-bottom: 8px;
+}
+.rename-btns-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.rename-inline-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 10px;
+  background: #2a2a2a;
+  border: 1px solid #3a3a3a;
+  border-radius: 6px;
+  color: #fff;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.rename-inline-btn:hover { border-color: #7B4FBE55; background: #333; }
+.rename-btn-icon { font-size: 15px; flex-shrink: 0; }
+.rename-btn-name { font-size: 10px; font-weight: 600; margin-bottom: 1px; }
+.rename-btn-desc { font-size: 8px; opacity: 0.4; }
+
+/* Selection badge on the Actions button */
+.qa-sel-badge {
+  background: rgba(255,255,255,0.18);
+  border-radius: 8px;
+  padding: 1px 5px;
+  font-size: 9px;
+  font-weight: 700;
+  margin-left: 5px;
+  vertical-align: middle;
+}
+
+/* Conversation result items */
+.result-item {
+  background: #2a2a2a;
+  border: 1px solid #3a3a3a;
+  border-radius: 8px;
+  padding: 12px;
+  animation: slideInUp 0.25s ease;
+}
+.result-item.grammar  { border-left: 3px solid #fbbf24; }
+.result-item.autolayout { border-left: 3px solid #3b82f6; }
+.result-item.alignment  { border-left: 3px solid #8b5cf6; }
+.result-item.contrast   { border-left: 3px solid #f97316; }
+.result-item.applied { opacity: 0.45; }
+@keyframes slideInUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.result-action-badge {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  opacity: 0.5;
+  margin-bottom: 4px;
+}
+.result-node-name { font-size: 10px; opacity: 0.45; margin-bottom: 8px; }
+.result-text-diff {
+  background: #1a1a1a;
+  border-radius: 4px;
+  padding: 8px 10px;
+  margin-bottom: 10px;
+  font-size: 11px;
+  line-height: 1.6;
+}
+.diff-original  { color: #ff6b6b; text-decoration: line-through; opacity: 0.8; margin-bottom: 3px; }
+.diff-corrected { color: #4ade80; }
+.result-description { font-size: 11px; line-height: 1.5; opacity: 0.8; margin-bottom: 10px; }
+.result-actions-row { display: flex; gap: 6px; justify-content: flex-end; }
+.result-btn {
+  padding: 5px 12px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  border: none;
+}
+.result-btn.apply    { background: #4ade80; color: #000; }
+.result-btn.apply:hover    { background: #3ac970; }
+.result-btn.apply:disabled { opacity: 0.4; cursor: default; }
+.result-btn.annotate { background: #3b82f6; color: #fff; }
+.result-btn.annotate:hover { background: #2563eb; }
+.result-btn.annotate:disabled { opacity: 0.4; cursor: default; }
+
+/* Analyzing indicator */
+.analyzing-indicator {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  background: #2a2a2a;
+  border: 1px solid #3a3a3a;
+  border-radius: 8px;
+  font-size: 11px;
+  opacity: 0.7;
+}
+.analyzing-dots { display: flex; gap: 4px; }
+.analyzing-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: #7B4FBE;
+  animation: dotBounce 1.2s infinite;
+}
+.analyzing-dot:nth-child(2) { animation-delay: 0.2s; }
+.analyzing-dot:nth-child(3) { animation-delay: 0.4s; }
+@keyframes dotBounce {
+  0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+  40%           { transform: scale(1);   opacity: 1; }
+}
+
+/* Results section separator */
+.results-section-header {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  opacity: 0.35;
+  padding: 2px 0;
+}
+
+/* Rename bottom sheet */
+.rename-options { display: flex; flex-direction: column; gap: 8px; }
+.rename-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: #2a2a2a;
+  border: 1px solid #3a3a3a;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.rename-option:hover { border-color: #7B4FBE; background: #333; }
+.rename-option-icon { font-size: 20px; flex-shrink: 0; }
+.rename-option-title { font-size: 12px; font-weight: 600; margin-bottom: 2px; }
+.rename-option-desc  { font-size: 10px; opacity: 0.45; }
+
 </style>
 </head>
 <body>
@@ -815,8 +1286,7 @@ textarea {
 <!-- Projects Tab -->
 <div class="tab-content active" id="projects-content">
   <div class="project-list" id="projectList"></div>
-  
-  <button class="btn-add-project" onclick="openAddProject()">+ Add New Project</button>
+  <div id="addProjectArea"></div>
 </div>
 
 <!-- Add Project Bottom Sheet -->
@@ -884,44 +1354,107 @@ Return format: {"projectName": "...", "goals": ["...", "..."]}</textarea>
 
 <!-- Fixes Tab -->
 <div class="tab-content" id="fixes-content">
-  <!-- Action Buttons -->
-  <div class="fixes-actions-section">
-    <div class="section-title">🔍 Quick Actions</div>
-    <div class="section-desc">Select a frame, then click an action below</div>
-    
-    <div class="action-buttons">
-      <button class="action-btn" onclick="checkGrammar()">
-        <span class="action-icon">🔤</span>
-        <span class="action-label">Check Grammar</span>
-      </button>
-      
-      <button class="action-btn" onclick="checkAutoLayout()">
-        <span class="action-icon">📐</span>
-        <span class="action-label">Auto-layout</span>
-      </button>
-      
-      <button class="action-btn" onclick="checkContrast()">
-        <span class="action-icon">🎨</span>
-        <span class="action-label">Contrast</span>
-      </button>
-      
-      <button class="action-btn action-btn-primary" onclick="generalReview()">
-        <span class="action-icon">📋</span>
-        <span class="action-label">Full Review</span>
-      </button>
+  <!-- Scrollable conversation area -->
+  <div class="results-area" id="resultsArea">
+    <div class="empty-state" id="fixesEmpty">
+      <div class="empty-icon">✨</div>
+      <div class="empty-text">
+        Select a frame in Figma,<br>then tap Actions below.
+      </div>
     </div>
   </div>
-  
-  <!-- Fixes List -->
-  <div class="fixes-list-section">
-    <div class="section-title" style="margin-top: 20px;">📝 Issues Found</div>
-    <div class="fix-list" id="fixList"></div>
-    
-    <div class="empty-state" id="fixesEmpty">
-      <div class="empty-icon">✅</div>
-      <div class="empty-text">
-        No issues found yet.<br>
-        Use quick actions above or ask Claude to review.
+  <!-- Fixed bottom bar -->
+  <div class="quick-actions-bar" id="quickActionsBar">
+    <button class="qa-bar-btn" id="qaMainBtn" onclick="openQuickActions()">⚡ Actions<span class="qa-sel-badge" id="qaSelBadge" style="display:none;"></span></button>
+    <button class="qa-cancel-btn" id="qaCancelBtn" onclick="cancelAction()" style="display:none;">✕ Cancel</button>
+    <button class="qa-clear-btn" id="qaClearBtn" onclick="clearResults()" title="Clear results" style="display:none;">🗑️</button>
+  </div>
+</div>
+
+<!-- Actions Bottom Sheet -->
+<div class="bottom-sheet" id="quickActionsSheet">
+  <div class="bottom-sheet-overlay" onclick="closeQuickActions()"></div>
+  <div class="bottom-sheet-content">
+    <div class="sheet-header">
+      <div class="sheet-title">⚡ Actions</div>
+      <button class="sheet-close" onclick="closeQuickActions()">✕</button>
+    </div>
+    <div class="sheet-body">
+      <div class="section-desc" id="actionsSheetDesc" style="margin-bottom: 12px;">Select one or more frames, then choose an action.</div>
+      <div class="action-tiles-grid">
+        <div class="action-tile" onclick="runAction('grammar')">
+          <div class="action-tile-icon">🔤</div>
+          <div><div class="action-tile-name">Grammar</div><div class="action-tile-desc">Fix text errors</div></div>
+        </div>
+        <div class="action-tile" onclick="runAction('autolayout')">
+          <div class="action-tile-icon">📐</div>
+          <div><div class="action-tile-name">Auto-layout</div><div class="action-tile-desc">Spacing & padding</div></div>
+        </div>
+        <div class="action-tile" onclick="runAction('alignment')">
+          <div class="action-tile-icon">📏</div>
+          <div><div class="action-tile-name">Alignment</div><div class="action-tile-desc">Element alignment</div></div>
+        </div>
+        <div class="action-tile" onclick="runAction('contrast')">
+          <div class="action-tile-icon">🎨</div>
+          <div><div class="action-tile-name">Contrast</div><div class="action-tile-desc">Color accessibility</div></div>
+        </div>
+      </div>
+
+      <!-- Rename Layers section -->
+      <div class="rename-section">
+        <div class="rename-section-title">✏️ Rename Layers</div>
+        <div class="rename-btns-row">
+          <button class="rename-inline-btn" onclick="closeQuickActions(); renameAction('native');">
+            <span class="rename-btn-icon">⌘</span>
+            <div>
+              <div class="rename-btn-name">Rename (Native)</div>
+              <div class="rename-btn-desc">Figma's rename dialog</div>
+            </div>
+          </button>
+          <button class="rename-inline-btn" onclick="closeQuickActions(); renameAction('from-content');">
+            <span class="rename-btn-icon">📝</span>
+            <div>
+              <div class="rename-btn-name">Rename (Content)</div>
+              <div class="rename-btn-desc">Name from text content</div>
+            </div>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Rename Layers Bottom Sheet -->
+<div class="bottom-sheet" id="renameSheet">
+  <div class="bottom-sheet-overlay" onclick="closeRenameSheet()"></div>
+  <div class="bottom-sheet-content">
+    <div class="sheet-header">
+      <div class="sheet-title">✏️ Rename Layers</div>
+      <button class="sheet-close" onclick="closeRenameSheet()">✕</button>
+    </div>
+    <div class="sheet-body">
+      <!-- Native Figma shortcut -->
+      <div class="rename-option" onclick="renameAction('native')" style="background:#1a1a1a; border-color:#7B4FBE33; margin-bottom:12px;">
+        <div class="rename-option-icon">✨</div>
+        <div style="flex:1;">
+          <div class="rename-option-title">Figma native rename</div>
+          <div class="rename-option-desc">Batch rename · search & replace · prefix/suffix · numbering</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:3px;align-items:flex-end;flex-shrink:0;">
+          <span style="background:#2a2a2a;border:1px solid #444;border-radius:4px;padding:2px 7px;font-size:10px;font-weight:700;font-family:monospace;">⌘R</span>
+          <span style="font-size:9px;opacity:0.35;">Ctrl+R on Win</span>
+        </div>
+      </div>
+
+      <div class="section-desc" style="margin-bottom:8px;padding-top:4px;border-top:1px solid #2a2a2a;">Our extras — selects layers first</div>
+      <div class="rename-options">
+        <div class="rename-option" onclick="renameAction('from-content')">
+          <div class="rename-option-icon">📝</div>
+          <div>
+            <div class="rename-option-title">Name from content</div>
+            <div class="rename-option-desc">Text layers get named after their actual text</div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -929,32 +1462,98 @@ Return format: {"projectName": "...", "goals": ["...", "..."]}</textarea>
 
 <!-- Settings Tab -->
 <div class="tab-content" id="settings-content">
+
+  <!-- How it works -->
   <div class="settings-section">
-    <div class="settings-header">🔗 Connection Status</div>
-    <div class="settings-description">
-      Sidebot works in two modes:
+    <div class="settings-header">📐 How Sidebot Works</div>
+    <div class="arch-flow">
+      <div class="arch-node highlight">
+        <div class="arch-node-icon">🧩</div>
+        <div class="arch-node-name">Plugin</div>
+        <div class="arch-node-sub">This panel</div>
+      </div>
+      <div class="arch-arrow">⟷</div>
+      <div class="arch-node">
+        <div class="arch-node-icon">🌉</div>
+        <div class="arch-node-name">Bridge</div>
+        <div class="arch-node-sub">localhost:3001</div>
+      </div>
+      <div class="arch-arrow">⟷</div>
+      <div class="arch-node">
+        <div class="arch-node-icon">🤖</div>
+        <div class="arch-node-name">Claude</div>
+        <div class="arch-node-sub">Desktop app</div>
+      </div>
     </div>
-    <div id="bridgeStatusCard" class="status-card"></div>
+    <div class="arch-mcp-row">
+      ✦ Figma Connector (MCP) — Claude reads Figma files directly via API
+    </div>
+    <div class="settings-description" style="margin-top: 8px;">
+      Figma plugins are sandboxed — they can't call Claude directly. The <strong>Bridge</strong> is a small local server that relays messages between them. The <strong>Figma Connector</strong> is a separate MCP tool that lets Claude read your design files without any copy/paste.
+    </div>
   </div>
-  
-  <div class="settings-section" id="bridgeSetupSection">
-    <div class="settings-header">⚡ Enable Seamless Mode</div>
+
+  <!-- Live Status LEDs -->
+  <div class="settings-section">
+    <div class="settings-header" style="display: flex; justify-content: space-between; align-items: center;">
+      <span>💡 Live Status</span>
+      <button class="btn-refresh" onclick="refreshStatus()">↻ Refresh</button>
+    </div>
+    <div class="led-panel">
+      <div class="led-row">
+        <div class="led green"></div>
+        <div class="led-info">
+          <div class="led-name">Plugin</div>
+          <div class="led-status">Running inside Figma</div>
+        </div>
+      </div>
+      <div class="led-row">
+        <div class="led gray" id="bridgeLed"></div>
+        <div class="led-info">
+          <div class="led-name">Bridge Server</div>
+          <div class="led-status" id="bridgeLedStatus">Checking…</div>
+        </div>
+      </div>
+      <div class="led-row">
+        <div class="led amber"></div>
+        <div class="led-info">
+          <div class="led-name">Figma Connector (MCP)</div>
+          <div class="led-status">Verify in Claude Desktop → Settings → Connectors</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bridge download (shown only when offline) -->
+  <div class="settings-section" id="bridgeSetupSection" style="display:none;">
+    <div class="settings-header">⚡ Start the Bridge</div>
     <div class="settings-description">
-      Download the free Bridge app for automatic sync with Claude Desktop.
+      The Bridge is a small local server you run once. It stays in the background and reconnects automatically.
     </div>
     <a href="https://github.com/AnderMagri/sidebot/tree/main/bridge" target="_blank" class="btn-download">
-      📥 Download Bridge App
+      📥 Download Bridge
     </a>
     <div class="help-text">
-      <strong>Quick Setup:</strong><br>
+      <strong>Setup (2 min):</strong><br>
       1. Download from GitHub<br>
-      2. Extract and run start.sh (Mac) or start.bat (Windows)<br>
-      3. Plugin auto-connects! 🟢<br><br>
-      
-      <strong>Or use Manual Mode</strong> - No installation needed!
+      2. Run <code>start.sh</code> (Mac/Linux) or <code>start.bat</code> (Windows)<br>
+      3. Come back and hit ↻ Refresh
     </div>
   </div>
-  
+
+  <!-- Troubleshooting Chat -->
+  <div class="settings-section">
+    <div class="settings-header" style="display:flex;justify-content:space-between;align-items:center;">
+      <span>💬 Troubleshoot</span>
+      <button class="btn-refresh" onclick="restartChat()">↺ Restart</button>
+    </div>
+    <div class="chat-widget">
+      <div class="chat-messages" id="chatMessages"></div>
+      <div class="chat-options" id="chatOptions"></div>
+    </div>
+  </div>
+
+  <!-- Keyboard Shortcuts -->
   <div class="settings-section">
     <div class="settings-header">⌨️ Keyboard Shortcuts</div>
     <div class="keyboard-shortcuts">
@@ -964,43 +1563,18 @@ Return format: {"projectName": "...", "goals": ["...", "..."]}</textarea>
       <span class="key">4</span> <span>Settings</span>
     </div>
   </div>
-  
-  <div class="settings-section">
-    <div class="settings-header">🔌 Figma Desktop Bridge (Optional)</div>
-    <div class="settings-description">
-      For advanced users: Enable direct file reading by Claude
-    </div>
-    <div class="help-text">
-      <strong>What it does:</strong><br>
-      Allows Claude to read your Figma files directly without copy/paste<br><br>
-      
-      <strong>How to install:</strong><br>
-      1. Open Claude Desktop → Settings → Connectors<br>
-      2. Find "Figma" and click Connect<br>
-      3. In Figma: Right-click → Plugins → Development → Figma Desktop Bridge<br>
-      4. Click Run<br><br>
-      
-      <strong>When enabled, Claude can:</strong><br>
-      • Read your designs automatically<br>
-      • Analyze multiple frames at once<br>
-      • Check consistency across screens<br><br>
-      
-      ⚠️ This is separate from the Sidebot Bridge server
-    </div>
-  </div>
-  
+
+  <!-- About -->
   <div class="settings-section">
     <div class="settings-header">ℹ️ About</div>
     <div class="help-text">
       <strong>Sidebot v1.0</strong><br>
       AI-powered PRD validation for Figma<br><br>
-      
       Track requirements, get instant feedback, and catch issues early with Claude Desktop integration.<br><br>
-      
-      <strong>Support:</strong> GitHub Issues<br>
-      <strong>License:</strong> MIT
+      <strong>Support:</strong> GitHub Issues &nbsp;|&nbsp; <strong>License:</strong> MIT
     </div>
   </div>
+
 </div>
 
 <script>
@@ -1110,25 +1684,30 @@ Return format: {"projectName": "...", "goals": ["...", "..."]}</textarea>
     }
     
     if (message.type === 'add-fixes-from-claude') {
-      // Claude is adding fixes via bridge!
-      const existing = allProjects.find(p => p.name === message.projectName);
-      
-      if (existing) {
-        parent.postMessage({ 
-          pluginMessage: { 
-            type: 'add-fixes',
-            projectId: existing.id,
-            fixes: message.fixes
-          } 
-        }, '*');
-        
-        // Show notification
-        alert(`✅ Claude found ${message.fixes.length} issues in "${message.projectName}"!`);
-        
-        // Switch to Fixes tab
+      // Switch to Fixes tab and show results as conversation items
+      document.querySelector('[data-tab="fixes"]').click();
+      removeAnalyzingIndicator();
+
+      const fixes = message.fixes || [];
+      fixes.forEach((fix, i) => {
         setTimeout(() => {
-          document.querySelector('[data-tab="fixes"]').click();
-        }, 500);
+          addResultItem({
+            id: 'bridge-' + Date.now() + '-' + i,
+            action: fix.action || window.pendingActionType || 'grammar',
+            nodeId: fix.nodeId || '',
+            nodeName: fix.nodeName || '',
+            original: fix.current || fix.original || '',
+            corrected: fix.expected || fix.corrected || fix.suggestion || '',
+            description: fix.description || fix.suggestion || fix.issue || '',
+            issue: fix.issue || ''
+          });
+        }, i * 120);
+      });
+
+      // Also persist to project if active
+      const existing = allProjects.find(p => p.name === message.projectName);
+      if (existing) {
+        parent.postMessage({ pluginMessage: { type: 'add-fixes', projectId: existing.id, fixes } }, '*');
       }
     }
   }
@@ -1148,7 +1727,7 @@ Return format: {"projectName": "...", "goals": ["...", "..."]}</textarea>
   function updateConnectionIndicator(connected) {
     const dot = document.querySelector('.status-dot');
     const text = document.querySelector('.connection-status span');
-    
+
     if (connected) {
       dot.style.background = '#4ade80';
       text.textContent = 'Claude';
@@ -1156,38 +1735,94 @@ Return format: {"projectName": "...", "goals": ["...", "..."]}</textarea>
       dot.style.background = '#ff6b6b';
       text.textContent = 'Offline';
     }
-    
-    // Update settings page status card
-    updateSettingsStatus(connected);
+
+    updateLedPanel(connected);
   }
-  
-  // ─── UPDATE SETTINGS STATUS CARD ───
-  function updateSettingsStatus(connected) {
-    const card = document.getElementById('bridgeStatusCard');
+
+  // ─── UPDATE LED PANEL ───
+  function updateLedPanel(connected) {
+    const led = document.getElementById('bridgeLed');
+    const status = document.getElementById('bridgeLedStatus');
     const setupSection = document.getElementById('bridgeSetupSection');
-    
+
     if (connected) {
-      card.className = 'status-card connected';
-      card.innerHTML = `
-        <strong>🟢 Seamless Mode Active</strong><br>
-        Bridge connected! Talk to Claude naturally - everything syncs automatically.
-      `;
+      led.className = 'led green';
+      status.textContent = 'Connected on localhost:3001';
       setupSection.style.display = 'none';
     } else {
-      card.className = 'status-card disconnected';
-      card.innerHTML = `
-        <strong>🔴 Manual Mode</strong><br>
-        Copy/paste JSON workflow. Or download Bridge app below for seamless integration.
-      `;
+      led.className = 'led red';
+      status.textContent = 'Not running — start the Bridge server';
       setupSection.style.display = 'block';
     }
+
+    updateAddProjectArea(connected);
+  }
+
+  // ─── ADD PROJECT AREA ───
+  function updateAddProjectArea(connected) {
+    const area = document.getElementById('addProjectArea');
+    if (!area) return;
+
+    if (connected) {
+      area.innerHTML =
+        '<div class="add-project-claude-block">' +
+          '<button class="btn-ask-claude" onclick="copyClaudeProjectPrompt(this)">' +
+            '<div class="ask-claude-label">💬 Ask Claude to create it</div>' +
+            '<div class="ask-claude-prompt">"Create a project called [name]"</div>' +
+            '<div class="ask-claude-copy-hint">Click to copy prompt</div>' +
+          '</button>' +
+          '<button class="btn-add-manual" onclick="openAddProject()">or add manually</button>' +
+        '</div>';
+    } else {
+      area.innerHTML =
+        '<div class="add-project-claude-block">' +
+          '<button class="btn-add-project" onclick="openAddProject()">+ Add New Project</button>' +
+          '<button class="btn-ask-claude-ghost" onclick="showBridgeNudge(this)">💬 or ask Claude to create it<span style="display:block;font-size:9px;opacity:0.45;margin-top:3px;">Bridge must be running — Settings ⚙️</span></button>' +
+        '</div>';
+    }
+  }
+
+  function showBridgeNudge(btn) {
+    const existing = btn.parentElement.querySelector('.bridge-nudge');
+    if (existing) return;
+    const nudge = document.createElement('div');
+    nudge.className = 'bridge-nudge';
+    nudge.textContent = '💡 Start the Bridge first — go to Settings ⚙️';
+    btn.insertAdjacentElement('afterend', nudge);
+    setTimeout(() => nudge.remove(), 3000);
+  }
+
+  function copyClaudeProjectPrompt(btn) {
+    const prompt = 'Create a project called [name]';
+    navigator.clipboard.writeText(prompt).catch(() => {});
+    const hint = btn.querySelector('.ask-claude-copy-hint');
+    const orig = hint.textContent;
+    hint.textContent = '✓ Copied! Paste in Claude Desktop';
+    setTimeout(() => { hint.textContent = orig; }, 2000);
+  }
+
+  // ─── REFRESH STATUS ───
+  function refreshStatus() {
+    const led = document.getElementById('bridgeLed');
+    const status = document.getElementById('bridgeLedStatus');
+    led.className = 'led amber';
+    status.textContent = 'Checking…';
+    // Force a new WebSocket attempt if disconnected
+    if (!bridgeConnected) {
+      connectToBridge();
+    }
+    setTimeout(() => updateLedPanel(bridgeConnected), 3200);
   }
   
   // ─── INITIALIZE ───
   parent.postMessage({ pluginMessage: { type: 'load-projects' } }, '*');
-  
+
   // Connect to bridge
   connectToBridge();
+
+  // Set initial state (bridge assumed offline until WS connects)
+  updateLedPanel(false);
+  updateAddProjectArea(false);
   
   // ─── TAB SWITCHING ───
   document.querySelectorAll('.tab').forEach(tab => {
@@ -1402,77 +2037,209 @@ Return format: {"projectName": "...", "goals": ["...", "..."]}</textarea>
     }
   }
   
-  // ─── ACTION BUTTON FUNCTIONS ───
-  function checkGrammar() {
-    const selection = figma.currentPage?.selection;
-    if (!selection || selection.length === 0) {
-      alert('Please select a frame or text layer first!');
-      return;
-    }
-    
-    parent.postMessage({ 
-      pluginMessage: { 
-        type: 'send-to-claude',
-        mode: 'selection',
-        action: 'grammar'
-      } 
-    }, '*');
-    
-    alert('📋 Copy the data below and paste in Claude Desktop:\n\n"Check grammar and spelling in my selected design"');
+  // ─── QUICK ACTIONS ───
+  function openQuickActions() {
+    document.getElementById('quickActionsSheet').classList.add('open');
   }
-  
-  function checkAutoLayout() {
-    const selection = figma.currentPage?.selection;
-    if (!selection || selection.length === 0) {
-      alert('Please select a frame first!');
-      return;
-    }
-    
-    parent.postMessage({ 
-      pluginMessage: { 
-        type: 'send-to-claude',
-        mode: 'selection',
-        action: 'autolayout'
-      } 
-    }, '*');
-    
-    alert('📋 Copy the data below and paste in Claude Desktop:\n\n"Check auto-layout setup and suggest improvements"');
+  function closeQuickActions() {
+    document.getElementById('quickActionsSheet').classList.remove('open');
   }
-  
-  function checkContrast() {
-    const selection = figma.currentPage?.selection;
-    if (!selection || selection.length === 0) {
-      alert('Please select a frame first!');
+
+  function runAction(type) {
+    closeQuickActions();
+    // Switch to Fixes tab
+    document.querySelector('[data-tab="fixes"]').click();
+
+    // If bridge is offline, show an inline error rather than an infinite spinner
+    if (!bridgeConnected) {
+      addErrorResult('⚠️ Bridge is offline. Start the Bridge server (see Settings ⚙️) and try again.');
       return;
     }
-    
-    parent.postMessage({ 
-      pluginMessage: { 
-        type: 'send-to-claude',
-        mode: 'selection',
-        action: 'contrast'
-      } 
-    }, '*');
-    
-    alert('📋 Copy the data below and paste in Claude Desktop:\n\n"Check color contrast ratios for accessibility (WCAG AA)"');
+
+    // Show analyzing indicator
+    addAnalyzingIndicator(type);
+    // Send to plugin / bridge
+    parent.postMessage({ pluginMessage: { type: 'send-to-claude', mode: 'selection', action: type } }, '*');
+    window.pendingActionType = type;
   }
-  
-  function generalReview() {
-    const selection = figma.currentPage?.selection;
-    if (!selection || selection.length === 0) {
-      alert('Please select a frame first!');
+
+  let _analyzeTimeout = null;
+
+  function addAnalyzingIndicator(type) {
+    const area = document.getElementById('resultsArea');
+    document.getElementById('fixesEmpty').style.display = 'none';
+    // Remove existing indicator if any
+    const prev = document.getElementById('analyzingIndicator');
+    if (prev) prev.remove();
+    const labels = { grammar: 'Checking grammar', autolayout: 'Analyzing auto-layout', alignment: 'Checking alignment', contrast: 'Checking contrast' };
+    const el = document.createElement('div');
+    el.className = 'analyzing-indicator';
+    el.id = 'analyzingIndicator';
+    el.innerHTML =
+      '<div class="analyzing-dots">' +
+        '<div class="analyzing-dot"></div>' +
+        '<div class="analyzing-dot"></div>' +
+        '<div class="analyzing-dot"></div>' +
+      '</div>' +
+      '<span>' + (labels[type] || 'Analyzing') + '…</span>';
+    area.appendChild(el);
+    area.scrollTop = area.scrollHeight;
+
+    // Show cancel button, hide Quick Actions + clear
+    const mainBtn = document.getElementById('qaMainBtn');
+    const cancelBtn = document.getElementById('qaCancelBtn');
+    const clearBtn = document.getElementById('qaClearBtn');
+    if (mainBtn) mainBtn.style.display = 'none';
+    if (cancelBtn) cancelBtn.style.display = 'flex';
+    if (clearBtn) clearBtn.style.display = 'none';
+
+    // Auto-cancel after 30s with an error card
+    if (_analyzeTimeout) clearTimeout(_analyzeTimeout);
+    _analyzeTimeout = setTimeout(() => {
+      removeAnalyzingIndicator();
+      addErrorResult('⏱️ Analysis timed out. Make sure the Bridge is running and a frame is selected, then try again.');
+    }, 30000);
+  }
+
+  function removeAnalyzingIndicator() {
+    const el = document.getElementById('analyzingIndicator');
+    if (el) el.remove();
+
+    // Restore Quick Actions button, hide cancel
+    const mainBtn = document.getElementById('qaMainBtn');
+    const cancelBtn = document.getElementById('qaCancelBtn');
+    if (mainBtn) mainBtn.style.display = '';
+    if (cancelBtn) cancelBtn.style.display = 'none';
+
+    // Clear timeout
+    if (_analyzeTimeout) { clearTimeout(_analyzeTimeout); _analyzeTimeout = null; }
+
+    // Show clear btn if there are results
+    updateClearBtn();
+  }
+
+  function cancelAction() {
+    removeAnalyzingIndicator();
+    window.pendingActionType = null;
+  }
+
+  function clearResults() {
+    const area = document.getElementById('resultsArea');
+    area.querySelectorAll('.result-item, .analyzing-indicator').forEach(el => el.remove());
+    document.getElementById('fixesEmpty').style.display = 'block';
+    updateClearBtn();
+    window.pendingActionType = null;
+  }
+
+  function updateClearBtn() {
+    const btn = document.getElementById('qaClearBtn');
+    if (!btn) return;
+    const hasItems = document.querySelectorAll('#resultsArea .result-item').length > 0;
+    // Only show clear when not in cancel-mode (qaMainBtn visible)
+    const mainVisible = document.getElementById('qaMainBtn').style.display !== 'none';
+    btn.style.display = (hasItems && mainVisible) ? 'flex' : 'none';
+  }
+
+  function addErrorResult(msg) {
+    document.getElementById('fixesEmpty').style.display = 'none';
+    const area = document.getElementById('resultsArea');
+    const el = document.createElement('div');
+    el.className = 'result-item error';
+    el.innerHTML =
+      '<div class="result-action-badge" style="color:#ff6b6b;">⚠️ Error</div>' +
+      '<div class="result-description">' + escHtml(msg) + '</div>';
+    area.appendChild(el);
+    area.scrollTop = area.scrollHeight;
+    updateClearBtn();
+  }
+
+  // ─── RESTART CHAT ───
+  function restartChat() {
+    document.getElementById('chatMessages').innerHTML = '';
+    chatStep(null, 'start');
+  }
+
+  // ─── RESULT ITEMS ───
+  function addResultItem(result) {
+    removeAnalyzingIndicator();
+    document.getElementById('fixesEmpty').style.display = 'none';
+    const area = document.getElementById('resultsArea');
+    const action = result.action || window.pendingActionType || 'grammar';
+    const el = document.createElement('div');
+    el.className = 'result-item ' + action;
+    el.id = 'result-' + result.id;
+
+    const badges = { grammar: '🔤 Grammar', autolayout: '📐 Auto-layout', alignment: '📏 Alignment', contrast: '🎨 Contrast' };
+    let html = '<div class="result-action-badge">' + (badges[action] || action) + '</div>';
+    if (result.nodeName) html += '<div class="result-node-name">in "' + escHtml(result.nodeName) + '"</div>';
+
+    if (action === 'grammar') {
+      const original  = result.original  || result.current || result.issue || '';
+      const corrected = result.corrected || result.expected || result.suggestion || '';
+      html +=
+        '<div class="result-text-diff">' +
+          '<div class="diff-original">' + escHtml(original) + '</div>' +
+          '<div class="diff-corrected">→ ' + escHtml(corrected) + '</div>' +
+        '</div>' +
+        '<div class="result-actions-row">' +
+          '<button class="result-btn apply" onclick="applyGrammarFix(\'' + result.id + '\',\'' + escAttr(result.nodeId) + '\',\'' + escAttr(corrected) + '\',this)">✓ Apply</button>' +
+        '</div>';
+    } else {
+      const desc = result.description || result.suggestion || result.issue || '';
+      html +=
+        '<div class="result-description">' + escHtml(desc) + '</div>' +
+        '<div class="result-actions-row">' +
+          '<button class="result-btn annotate" onclick="annotateInFigma(\'' + result.id + '\',\'' + escAttr(result.nodeId) + '\',\'' + action + '\',this)">📌 Annotate</button>' +
+        '</div>';
+    }
+
+    el.innerHTML = html;
+    area.appendChild(el);
+    area.scrollTop = area.scrollHeight;
+    updateClearBtn();
+  }
+
+  function applyGrammarFix(resultId, nodeId, correctedText, btn) {
+    btn.disabled = true;
+    btn.textContent = '⏳';
+    parent.postMessage({ pluginMessage: { type: 'apply-text-fix', nodeId, correctedText } }, '*');
+    const item = document.getElementById('result-' + resultId);
+    if (item) { item.classList.add('applied'); btn.textContent = '✓ Applied'; }
+  }
+
+  function annotateInFigma(resultId, nodeId, actionType, btn) {
+    btn.disabled = true;
+    btn.textContent = '⏳';
+    const item = document.getElementById('result-' + resultId);
+    const desc = item ? (item.querySelector('.result-description') || {}).textContent || '' : '';
+    parent.postMessage({ pluginMessage: { type: 'annotate-node', nodeId, actionType, description: desc } }, '*');
+    if (item) { item.classList.add('applied'); btn.textContent = '📌 Annotated'; }
+  }
+
+  function escHtml(s) {
+    if (!s) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function escAttr(s) {
+    if (!s) return '';
+    return String(s).replace(/'/g,"\\'").replace(/\n/g,' ');
+  }
+
+  // ─── RENAME LAYERS ───
+  function openRenameSheet() {
+    document.getElementById('renameSheet').classList.add('open');
+  }
+  function closeRenameSheet() {
+    document.getElementById('renameSheet').classList.remove('open');
+  }
+  function renameAction(type) {
+    closeRenameSheet();
+    if (type === 'native') {
+      // Can't trigger Figma's native UI from a plugin — just remind the user
+      parent.postMessage({ pluginMessage: { type: 'notify', message: 'Press ⌘R (Mac) or Ctrl+R (Windows) to open Figma\'s Rename Layers dialog' } }, '*');
       return;
     }
-    
-    parent.postMessage({ 
-      pluginMessage: { 
-        type: 'send-to-claude',
-        mode: 'selection',
-        action: 'review'
-      } 
-    }, '*');
-    
-    alert('📋 Copy the data below and paste in Claude Desktop:\n\n"Review my design against the PRD requirements"');
+    parent.postMessage({ pluginMessage: { type: 'rename-layers', renameType: type } }, '*');
   }
   
   function renderGoals(project) {
@@ -1524,30 +2291,14 @@ Return format: {"projectName": "...", "goals": ["...", "..."]}</textarea>
   }
   
   function renderFixes(project) {
-    const list = document.getElementById('fixList');
+    // Fixes tab now uses a conversation-style results layout (resultsArea).
+    // The old #fixList element no longer exists — only manage the empty-state placeholder.
     const empty = document.getElementById('fixesEmpty');
-    
-    if (!project || !project.fixes || project.fixes.length === 0) {
-      list.innerHTML = '';
+    if (!empty) return;
+    const hasItems = document.querySelectorAll('#resultsArea .result-item').length > 0;
+    if (!hasItems) {
       empty.style.display = 'block';
-      return;
     }
-    
-    empty.style.display = 'none';
-    
-    list.innerHTML = project.fixes.map(f =>
-      '<div class="fix-item ' + (f.status === 'done' ? 'done' : '') + '">' +
-        '<div class="fix-header">' +
-          '<div class="fix-title">' + (f.status === 'done' ? '✅' : '⚠️') + ' ' + (f.issue || 'Issue') + '</div>' +
-        '</div>' +
-        '<div class="fix-description">' + (f.description || f.suggestion || 'No details') + '</div>' +
-        '<div class="fix-actions">' +
-          '<button class="fix-btn done-btn" onclick="markFixDone(\'' + f.id + '\')" ' + (f.status === 'done' ? 'disabled' : '') + '>' +
-            (f.status === 'done' ? 'Done ✓' : 'Mark as Fixed') +
-          '</button>' +
-        '</div>' +
-      '</div>'
-    ).join('');
   }
   
   function updateHeader(project) {
@@ -1703,7 +2454,163 @@ Return format: {"projectName": "...", "goals": ["...", "..."]}</textarea>
     if (msg.type === 'bridge-status') {
       updateConnectionIndicator(msg.connected);
     }
+
+    if (msg.type === 'selection-changed') {
+      const badge = document.getElementById('qaSelBadge');
+      const desc  = document.getElementById('actionsSheetDesc');
+      if (msg.count > 0) {
+        const label = msg.count + (msg.count === 1 ? ' frame' : ' frames');
+        if (badge) { badge.textContent = label; badge.style.display = 'inline'; }
+        if (desc) {
+          const warn = msg.count > 5 ? ' Large selections may take longer.' : '';
+          desc.textContent = label + ' selected — choose an action.' + warn;
+        }
+      } else {
+        if (badge) badge.style.display = 'none';
+        if (desc) desc.textContent = 'Select one or more frames, then choose an action.';
+      }
+    }
   };
+
+  // ─── TROUBLESHOOTING CHAT ───
+  const CHAT_TREE = {
+    start: {
+      bot: "Hi! What's not working?",
+      opts: [
+        { label: "Bridge is offline / not connecting", next: 'bridge_start' },
+        { label: "Figma Connector (MCP) not working", next: 'mcp_start' },
+        { label: "Fixes aren't appearing in the panel", next: 'fixes_start' },
+        { label: "Everything looks good!", next: 'all_good' }
+      ]
+    },
+    bridge_start: {
+      bot: "Let's fix your Bridge connection. Is Node.js installed on your computer?",
+      opts: [
+        { label: "Yes, Node.js is installed", next: 'bridge_node_yes' },
+        { label: "No / Not sure", next: 'bridge_node_no' }
+      ]
+    },
+    bridge_node_yes: {
+      bot: "Good! Did you run start.sh (Mac/Linux) or start.bat (Windows) from inside the bridge folder?",
+      opts: [
+        { label: "Yes, I ran it", next: 'bridge_ran' },
+        { label: "No — how do I do that?", next: 'bridge_how_to_run' }
+      ]
+    },
+    bridge_ran: {
+      bot: "A few things to check:\n① Anything using port 3001? Restart the bridge.\n② Firewall blocking localhost? Try disabling temporarily.\n③ Run directly: open a terminal → cd into bridge folder → node bridge-server.js\n\nHit ↻ Refresh above after fixing.",
+      opts: [
+        { label: "Still not working → Open GitHub Issues", next: 'github' },
+        { label: "Start over", next: 'start' }
+      ]
+    },
+    bridge_how_to_run: {
+      bot: "Open a terminal and navigate to the bridge folder:\n\n• Mac/Linux:  bash start.sh\n• Windows:    start.bat\n\nYou should see \"Bridge Server Running\" printed. Then hit ↻ Refresh.",
+      opts: [
+        { label: "I ran it — let me refresh!", next: 'bridge_refresh' },
+        { label: "Start over", next: 'start' }
+      ]
+    },
+    bridge_refresh: {
+      bot: "Hit the ↻ Refresh button above to check the status. If the LED turns green you're good to go!",
+      opts: [
+        { label: "It's green now!", next: 'bridge_fixed' },
+        { label: "Still red…", next: 'bridge_ran' }
+      ]
+    },
+    bridge_fixed: {
+      bot: "Bridge is connected! Claude Desktop can now sync goals and fixes automatically. Happy designing!",
+      opts: [{ label: "Start over", next: 'start' }]
+    },
+    bridge_node_no: {
+      bot: "You need Node.js first — it's free and takes about 2 minutes.\n\n1. Go to nodejs.org\n2. Download the LTS version\n3. Install it\n4. Come back and run the bridge",
+      opts: [
+        { label: "Got it, I'll install Node.js", next: 'bridge_how_to_run' },
+        { label: "Start over", next: 'start' }
+      ]
+    },
+    mcp_start: {
+      bot: "The Figma Connector is set up in Claude Desktop, not here. Steps:\n\n1. Open Claude Desktop\n2. Settings → Connectors\n3. Find \"Figma\" → click Connect\n4. In Figma: right-click → Plugins → Development → Figma Desktop Bridge → Run",
+      opts: [
+        { label: "Done! What's next?", next: 'mcp_done' },
+        { label: "I don't see Figma in Connectors", next: 'mcp_missing' }
+      ]
+    },
+    mcp_done: {
+      bot: "Claude can now read your Figma files directly! Try asking:\n\"Read my current Figma design and review it against the PRD.\"",
+      opts: [{ label: "Start over", next: 'start' }]
+    },
+    mcp_missing: {
+      bot: "You may need a newer version of Claude Desktop. The Figma Connector is available in version 0.7+.\n\nCheck for updates in the Claude Desktop app menu, then try again.",
+      opts: [{ label: "Start over", next: 'start' }]
+    },
+    fixes_start: {
+      bot: "To get fixes:\n① Select a frame in Figma\n② Go to the Fixes tab\n③ Click a Quick Action (Grammar, Contrast, etc.)\n\nIs the Bridge connected (green LED)?",
+      opts: [
+        { label: "Yes, Bridge is green", next: 'fixes_bridge_ok' },
+        { label: "No, Bridge is red", next: 'bridge_start' }
+      ]
+    },
+    fixes_bridge_ok: {
+      bot: "With Bridge connected, results come back automatically. Make sure:\n① A frame is actually selected in Figma\n② You're on the right project\n③ Try the Full Review button for the most complete output.",
+      opts: [
+        { label: "That worked!", next: 'all_good' },
+        { label: "Still nothing — open GitHub Issues", next: 'github' }
+      ]
+    },
+    all_good: {
+      bot: "All set! Use Fixes to analyze designs and Goals to track PRD requirements. Happy designing!",
+      opts: [{ label: "Start over", next: 'start' }]
+    },
+    github: {
+      bot: "Head to GitHub Issues and describe what's happening. Include:\n• Your OS (Mac/Windows/Linux)\n• Node.js version (node --version)\n• What the bridge terminal shows\n\nWe'll get it sorted!",
+      opts: [{ label: "Start over", next: 'start' }]
+    }
+  };
+
+  let chatHistory = [];
+
+  function chatAddMsg(text, role) {
+    const msgs = document.getElementById('chatMessages');
+    const el = document.createElement('div');
+    el.className = 'chat-msg ' + role;
+    el.textContent = text;
+    msgs.appendChild(el);
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+
+  function chatSetOptions(opts) {
+    const container = document.getElementById('chatOptions');
+    container.innerHTML = '';
+    opts.forEach(opt => {
+      const btn = document.createElement('button');
+      btn.className = 'chat-opt-btn';
+      btn.textContent = opt.label;
+      btn.onclick = () => chatStep(opt.label, opt.next);
+      container.appendChild(btn);
+    });
+  }
+
+  function chatStep(userLabel, nodeKey) {
+    if (userLabel) chatAddMsg(userLabel, 'user');
+    const node = CHAT_TREE[nodeKey] || CHAT_TREE.start;
+    setTimeout(() => {
+      chatAddMsg(node.bot, 'bot');
+      chatSetOptions(node.opts);
+    }, userLabel ? 300 : 0);
+  }
+
+  function initChat() {
+    chatStep(null, 'start');
+  }
+
+  // Initialize chat when settings tab is first viewed
+  document.querySelector('[data-tab="settings"]').addEventListener('click', () => {
+    if (document.getElementById('chatMessages').children.length === 0) {
+      initChat();
+    }
+    updateLedPanel(bridgeConnected);
+  });
 </script>
 
 </body>
