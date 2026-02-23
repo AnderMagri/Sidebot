@@ -34,6 +34,12 @@ jobs:
           echo "Built files:"
           ls -lh dist/
 
+      - name: Rename Mac binaries for clean filenames
+        working-directory: bridge
+        run: |
+          mv dist/sidebot-bridge-macos-arm64 dist/sidebot-bridge-mac-arm64
+          mv dist/sidebot-bridge-macos-x64   dist/sidebot-bridge-mac-x64
+
       - name: Create GitHub Release with binaries
         uses: softprops/action-gh-release@v2
         with:
