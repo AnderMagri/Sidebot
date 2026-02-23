@@ -18,8 +18,13 @@ Go to the [Releases page](https://github.com/AnderMagri/Sidebot/releases) and do
 2. Double-click the zip to extract — you get `SidebotBridge.app`
 3. Put `SidebotBridge.app` anywhere — Desktop works great
 4. Double-click `SidebotBridge.app`
-5. **First time only:** macOS asks to confirm → right-click → **"Open"** → **"Open"**
-6. Terminal opens and the bridge starts ✅
+5. **First time only:** macOS shows a security warning → click **"Done"**
+6. **First time only:** Allow the app using one of these two ways:
+   - **Option A:** Right-click `SidebotBridge.app` → **"Open"** → **"Open"** in the dialog
+   - **Option B:** Go to **System Settings → Privacy & Security** → scroll down → click **"Open Anyway"**
+7. Terminal opens and the bridge starts ✅
+
+> After the first time, just double-click to launch — no warnings.
 
 ### Windows
 
