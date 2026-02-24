@@ -458,7 +458,7 @@ textarea {
 .fixes-scroll-area::-webkit-scrollbar { width: 6px; }
 .fixes-scroll-area::-webkit-scrollbar-track { background: #1a1a1a; }
 .fixes-scroll-area::-webkit-scrollbar-thumb { background: #3a3a3a; border-radius: 3px; }
-.fixes-bottom-bar { flex-shrink: 0; padding: 10px 16px 14px; background: linear-gradient(transparent, #1a1a1a 25%); }
+.fixes-bottom-bar { flex-shrink: 0; padding: 8px 16px 10px; background: #1a1a1a; border-top: 1px solid #2a2a2a; }
 .fixes-bottom-btn {
   width: 100%; padding: 12px; background: #2a2a2a; border: 1px solid #7B4FBE;
   border-radius: 8px; color: #fff; font-size: 12px; font-weight: 600;
@@ -640,9 +640,9 @@ Return format: {"projectName": "...", "goals": ["...", "..."]}</textarea>
   <div class="fixes-scroll-area">
     <div class="section-title">📝 Issues Found</div>
     <div class="fix-list" id="fixList"></div>
-    <div class="empty-state" id="fixesEmpty">
+    <div class="empty-state" id="fixesEmpty" style="padding: 24px 20px;">
       <div class="empty-icon">✅</div>
-      <div class="empty-text">No issues yet.<br>Use Quick Actions to check your design.</div>
+      <div class="empty-text">No issues yet.<br>Tap <strong>⚡ Actions</strong> below to check your design.</div>
     </div>
   </div>
 
