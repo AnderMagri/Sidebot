@@ -430,19 +430,40 @@ textarea {
 .mode-badge.offline { background: #3d2a1a; border: 1px solid #5a3a1a; color: #fbbf24; }
 
 /* ─── TROUBLESHOOTING ─── */
-.troubleshoot-list { display: flex; flex-direction: column; gap: 8px; }
+.troubleshoot-list { display: flex; flex-direction: column; gap: 6px; }
 .troubleshoot-item {
   background: #222;
   border: 1px solid #333;
   border-left: 3px solid #4a4a4a;
   border-radius: 6px;
-  padding: 10px 12px;
+  overflow: hidden;
 }
 .troubleshoot-item.warn  { border-left-color: #fbbf24; }
 .troubleshoot-item.info  { border-left-color: #60a5fa; }
 .troubleshoot-item.error { border-left-color: #ff6b6b; }
-.troubleshoot-q { font-size: 11px; font-weight: 600; margin-bottom: 5px; }
-.troubleshoot-a { font-size: 10px; color: #888; line-height: 1.6; }
+.troubleshoot-q {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 10px 12px;
+  cursor: pointer;
+  user-select: none;
+}
+.troubleshoot-q:hover { background: #2a2a2a; }
+.troubleshoot-chevron { font-size: 9px; color: #666; transition: transform 0.2s; }
+.troubleshoot-item.open .troubleshoot-chevron { transform: rotate(180deg); }
+.troubleshoot-a {
+  display: none;
+  font-size: 10px;
+  color: #888;
+  line-height: 1.6;
+  padding: 0 12px 10px 12px;
+  border-top: 1px solid #2a2a2a;
+  padding-top: 8px;
+}
+.troubleshoot-item.open .troubleshoot-a { display: block; }
 .troubleshoot-a code { background: #333; padding: 1px 5px; border-radius: 3px; font-size: 9px; color: #ddd; }
 
 /* ─── ACTION BUTTONS ─── */
@@ -844,7 +865,10 @@ Return format: {"projectName": "...", "goals": ["...", "..."]}</textarea>
     <div class="troubleshoot-list">
 
       <div class="troubleshoot-item warn">
-        <div class="troubleshoot-q">Bridge shows Offline after opening the app</div>
+        <div class="troubleshoot-q" onclick="toggleTroubleshoot(this)">
+          Bridge shows Offline after opening the app
+          <span class="troubleshoot-chevron">▼</span>
+        </div>
         <div class="troubleshoot-a">
           Wait 3–5 seconds then click <strong>↻ Refresh</strong> above. The bridge takes a moment to start.<br>
           If still offline, make sure no other app is using port <code>3001</code>.
@@ -852,7 +876,10 @@ Return format: {"projectName": "...", "goals": ["...", "..."]}</textarea>
       </div>
 
       <div class="troubleshoot-item error">
-        <div class="troubleshoot-q">macOS says "SidebotBridge.app can't be opened"</div>
+        <div class="troubleshoot-q" onclick="toggleTroubleshoot(this)">
+          macOS says "SidebotBridge.app can't be opened"
+          <span class="troubleshoot-chevron">▼</span>
+        </div>
         <div class="troubleshoot-a">
           Right-click the app → <strong>Open</strong> → click Open in the dialog.<br>
           You only need to do this once — macOS remembers it.
@@ -860,7 +887,10 @@ Return format: {"projectName": "...", "goals": ["...", "..."]}</textarea>
       </div>
 
       <div class="troubleshoot-item warn">
-        <div class="troubleshoot-q">Notion search returns no results</div>
+        <div class="troubleshoot-q" onclick="toggleTroubleshoot(this)">
+          Notion search returns no results
+          <span class="troubleshoot-chevron">▼</span>
+        </div>
         <div class="troubleshoot-a">
           Make sure you've shared the Notion page with your integration:<br>
           Open the page in Notion → <strong>•••</strong> menu → <strong>Connections</strong> → add your integration.
@@ -868,7 +898,10 @@ Return format: {"projectName": "...", "goals": ["...", "..."]}</textarea>
       </div>
 
       <div class="troubleshoot-item info">
-        <div class="troubleshoot-q">Plugin loads but shows errors in Figma console</div>
+        <div class="troubleshoot-q" onclick="toggleTroubleshoot(this)">
+          Plugin loads but shows errors in Figma console
+          <span class="troubleshoot-chevron">▼</span>
+        </div>
         <div class="troubleshoot-a">
           Try reloading: in Figma go to Plugins → Development → <strong>Reload plugin</strong>.<br>
           If it persists, check the Figma console for the specific error.
@@ -876,7 +909,10 @@ Return format: {"projectName": "...", "goals": ["...", "..."]}</textarea>
       </div>
 
       <div class="troubleshoot-item info">
-        <div class="troubleshoot-q">Bridge connected but Claude doesn't respond</div>
+        <div class="troubleshoot-q" onclick="toggleTroubleshoot(this)">
+          Bridge connected but Claude doesn't respond
+          <span class="troubleshoot-chevron">▼</span>
+        </div>
         <div class="troubleshoot-a">
           Make sure Claude Desktop is open and you're in an active conversation.<br>
           The bridge relays data to Claude Desktop — it must be running.
@@ -884,7 +920,10 @@ Return format: {"projectName": "...", "goals": ["...", "..."]}</textarea>
       </div>
 
       <div class="troubleshoot-item warn">
-        <div class="troubleshoot-q">Port 3001 already in use</div>
+        <div class="troubleshoot-q" onclick="toggleTroubleshoot(this)">
+          Port 3001 already in use
+          <span class="troubleshoot-chevron">▼</span>
+        </div>
         <div class="troubleshoot-a">
           Another process is using the bridge port. Run:<br>
           <code>lsof -ti:3001 | xargs kill</code><br>
@@ -1071,6 +1110,15 @@ function updateNotionLED(connected, title) {
     chip.className        = 'notion-status-chip disconnected';
     chip.textContent      = 'Not Connected';
   }
+}
+
+function toggleTroubleshoot(qEl) {
+  var item = qEl.parentElement;
+  var isOpen = item.classList.contains('open');
+  // Close all
+  document.querySelectorAll('.troubleshoot-item.open').forEach(function(el) { el.classList.remove('open'); });
+  // Open this one if it wasn't already open
+  if (!isOpen) item.classList.add('open');
 }
 
 function refreshStatus() {
