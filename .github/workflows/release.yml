@@ -51,6 +51,14 @@ jobs:
           cp dist/sidebot-bridge-mac-arm64 SidebotBridge.app/Contents/Resources/
           cp dist/sidebot-bridge-mac-x64   SidebotBridge.app/Contents/Resources/
 
+          # Copy custom icon if present in repo
+          if [ -f "AppIcon.icns" ]; then
+            cp AppIcon.icns SidebotBridge.app/Contents/Resources/AppIcon.icns
+            echo "✅ Custom icon included"
+          else
+            echo "ℹ️  No AppIcon.icns found — app will use default icon"
+          fi
+
           # Create the launcher script (detects arch, opens Terminal, runs bridge)
           cat > SidebotBridge.app/Contents/MacOS/SidebotBridge << 'LAUNCHER'
           #!/bin/bash
@@ -66,8 +74,13 @@ jobs:
           LAUNCHER
           chmod +x SidebotBridge.app/Contents/MacOS/SidebotBridge
 
-          # Create Info.plist
-          cat > SidebotBridge.app/Contents/Info.plist << 'PLIST'
+          # Create Info.plist (with icon key if file exists)
+          ICON_LINE=""
+          if [ -f "AppIcon.icns" ]; then
+            ICON_LINE="  <key>CFBundleIconFile</key>\n  <string>AppIcon</string>"
+          fi
+
+          cat > SidebotBridge.app/Contents/Info.plist << PLIST
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
           <plist version="1.0">
@@ -84,6 +97,7 @@ jobs:
             <string>1.0</string>
             <key>LSMinimumSystemVersion</key>
             <string>10.13</string>
+            $([ -f "AppIcon.icns" ] && echo "<key>CFBundleIconFile</key><string>AppIcon</string>" || echo "")
           </dict>
           </plist>
           PLIST

@@ -1,12 +1,16 @@
 {
   "name": "Sidebot",
-  "id": "sidebot-v1",
+  "id": "sidebot-v2",
   "api": "1.0.0",
   "main": "code.js",
   "ui": "ui.html",
   "editorType": ["figma"],
   "networkAccess": {
-    "allowedDomains": ["ws://localhost:3001", "http://localhost:3000"],
-    "reasoning": "Plugin communicates with Claude Desktop via local Bridge server (WebSocket on port 3001, HTTP on port 3000)"
+    "allowedDomains": [
+      "ws://localhost:3001",
+      "http://localhost:3000",
+      "https://api.notion.com"
+    ],
+    "reasoning": "Bridge server on localhost for Claude sync. Notion API for PRD document fetching."
   }
 }
