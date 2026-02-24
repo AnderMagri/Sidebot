@@ -939,12 +939,12 @@ function connectToBridge() {
       bridgeConnected = false;
       updateConnectionUI(false);
       postToPlugin({ type: 'connect-to-bridge', connected: false });
-      setTimeout(connectToBridge, 3000);
+      setTimeout(connectToBridge, 15000);
     };
 
     bridgeSocket.onerror = function() {};
   } catch(e) {
-    setTimeout(connectToBridge, 3000);
+    setTimeout(connectToBridge, 15000);
   }
 }
 
