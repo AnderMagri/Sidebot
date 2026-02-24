@@ -319,6 +319,28 @@ textarea {
 .goal-text { flex: 1; font-size: 12px; line-height: 1.5; }
 .goal-item.done .goal-text { opacity: 0.5; text-decoration: line-through; }
 
+/* ─── GOAL HOVER ACTIONS + DRAG ─── */
+.goal-item { position: relative; cursor: default; }
+.goal-item:hover { background: #2e2e2e; }
+.goal-drag-handle {
+  cursor: grab; color: #444; font-size: 14px; flex-shrink: 0;
+  padding: 0 2px; user-select: none; transition: color 0.15s;
+}
+.goal-item:hover .goal-drag-handle { color: #777; }
+.goal-drag-handle:active { cursor: grabbing; }
+.goal-hover-actions {
+  display: flex; gap: 2px; opacity: 0; transition: opacity 0.15s; flex-shrink: 0;
+}
+.goal-item:hover .goal-hover-actions { opacity: 1; }
+.goal-action-btn {
+  background: none; border: none; color: #666; cursor: pointer;
+  padding: 3px 5px; font-size: 13px; border-radius: 4px; transition: all 0.15s; line-height: 1;
+}
+.goal-action-btn:hover        { background: #3a3a3a; color: #fff; }
+.goal-action-btn.del:hover    { background: rgba(255,107,107,0.15); color: #ff6b6b; }
+.goal-item.drag-over          { border-color: #7B4FBE; background: #261a40; }
+.goal-item.dragging           { opacity: 0.35; }
+
 /* ─── FIXES ─── */
 .fix-list { display: flex; flex-direction: column; gap: 12px; }
 .fix-item { background: #2a2a2a; border: 1px solid #3a3a3a; border-left: 3px solid #ff6b6b; border-radius: 6px; padding: 12px; }
@@ -627,7 +649,7 @@ Return format: {"projectName": "...", "goals": ["...", "..."]}</textarea>
   <!-- Floating bottom button -->
   <div class="fixes-bottom-bar">
     <button class="fixes-bottom-btn" onclick="openFixesActions()">
-      <span>🔍</span><span>Quick Actions</span>
+      <span>⚡</span><span>Actions</span>
     </button>
   </div>
 </div>
@@ -637,7 +659,7 @@ Return format: {"projectName": "...", "goals": ["...", "..."]}</textarea>
   <div class="bottom-sheet-overlay" onclick="closeFixesActions()"></div>
   <div class="bottom-sheet-content">
     <div class="sheet-header">
-      <div class="sheet-title">🔍 Quick Actions</div>
+      <div class="sheet-title">⚡ Actions</div>
       <button class="sheet-close" onclick="closeFixesActions()">✕</button>
     </div>
     <div class="sheet-body">
@@ -657,6 +679,10 @@ Return format: {"projectName": "...", "goals": ["...", "..."]}</textarea>
         <button class="action-btn" onclick="checkConsistency()" style="grid-column:1/-1;">
           <span class="action-icon">📐</span>
           <span class="action-label">Check Consistency — positions, fonts, styles</span>
+        </button>
+        <button class="action-btn" onclick="checkEdgeCases()" style="grid-column:1/-1;">
+          <span class="action-icon">🧪</span>
+          <span class="action-label">Edge Cases — adds sticky notes to canvas</span>
         </button>
       </div>
 
@@ -708,7 +734,7 @@ Return format: {"projectName": "...", "goals": ["...", "..."]}</textarea>
       <!-- Claude API row + inline key input -->
       <div class="status-row status-row-has-input">
         <div class="status-row-left">
-          <div class="status-row-name">Claude API</div>
+          <div class="status-row-name"><a href="https://console.anthropic.com/" target="_blank" style="color:#fff;text-decoration:underline;text-decoration-color:#555;">Claude API ↗</a></div>
           <div class="status-row-sub" id="claudeApiSub">No key saved</div>
         </div>
         <div class="led-chip">
@@ -737,7 +763,7 @@ Return format: {"projectName": "...", "goals": ["...", "..."]}</textarea>
       <!-- Notion row + inline token input -->
       <div class="status-row status-row-has-input" style="margin-top:6px;">
         <div class="status-row-left">
-          <div class="status-row-name">Notion</div>
+          <div class="status-row-name"><a href="https://www.notion.so/my-integrations" target="_blank" style="color:#fff;text-decoration:underline;text-decoration-color:#555;">Notion ↗</a></div>
           <div class="status-row-sub" id="notionSubText">Token not set</div>
         </div>
         <div class="led-chip" id="notionLed">
@@ -935,6 +961,15 @@ function handleBridgeMessage(message) {
       postToPlugin({ type: 'add-fixes', projectId: proj.id, fixes: message.fixes });
       alert('✅ Claude found ' + message.fixes.length + ' issues in "' + message.projectName + '"!');
       setTimeout(function() { document.querySelector('[data-tab="fixes"]').click(); }, 500);
+    }
+  }
+
+  if (message.type === 'add-edge-cases-from-claude') {
+    // Claude returned edge cases — create sticky notes on canvas
+    var cases     = message.cases || [];
+    var frameName = message.frameName || 'Screen';
+    if (cases.length) {
+      postToPlugin({ type: 'create-edge-cases', cases: cases, frameName: frameName });
     }
   }
 }
@@ -1293,6 +1328,73 @@ function deleteNotionToken() {
   if (del) del.style.display = 'none';
 }
 
+// ── GOAL ACTIONS ──
+var dragSrcGoalId = null;
+
+function editGoal(id) {
+  if (!currentProject) return;
+  var goal = null;
+  for (var i = 0; i < currentProject.goals.length; i++) {
+    if (currentProject.goals[i].id === id) { goal = currentProject.goals[i]; break; }
+  }
+  if (!goal) return;
+  var newText = prompt('Edit goal:', goal.text);
+  if (newText && newText.trim() && newText.trim() !== goal.text) {
+    postToPlugin({ type: 'edit-goal', projectId: currentProject.id, goalId: id, text: newText.trim() });
+  }
+}
+
+function removeGoal(id, e) {
+  if (e) e.stopPropagation();
+  if (!currentProject) return;
+  if (!confirm('Remove this goal?')) return;
+  postToPlugin({ type: 'remove-goal', projectId: currentProject.id, goalId: id });
+}
+
+function onGoalDragStart(e, id) {
+  dragSrcGoalId = id;
+  e.dataTransfer.effectAllowed = 'move';
+  setTimeout(function() { e.target.classList.add('dragging'); }, 0);
+}
+function onGoalDragEnd(e) {
+  e.target.classList.remove('dragging');
+  dragSrcGoalId = null;
+  document.querySelectorAll('.goal-item').forEach(function(el) { el.classList.remove('drag-over'); });
+}
+function onGoalDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  e.currentTarget.classList.add('drag-over');
+}
+function onGoalDragLeave(e) {
+  e.currentTarget.classList.remove('drag-over');
+}
+function onGoalDrop(e, targetId) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag-over');
+  if (!dragSrcGoalId || dragSrcGoalId === targetId || !currentProject) return;
+  var goals = currentProject.goals.slice();
+  var srcIdx = -1, tgtIdx = -1;
+  for (var i = 0; i < goals.length; i++) {
+    if (goals[i].id === dragSrcGoalId) srcIdx = i;
+    if (goals[i].id === targetId)      tgtIdx = i;
+  }
+  if (srcIdx === -1 || tgtIdx === -1) return;
+  var moved = goals.splice(srcIdx, 1)[0];
+  goals.splice(tgtIdx, 0, moved);
+  postToPlugin({ type: 'reorder-goals', projectId: currentProject.id, goals: goals });
+}
+
+// ── EDGE CASES ──
+function checkEdgeCases() {
+  closeFixesActions();
+  if (!bridgeConnected) {
+    alert('📋 Paste in Claude Desktop:\n"List all edge cases for this screen — empty states, loading states, error states, boundary inputs, accessibility edge cases. Return one per line."');
+    return;
+  }
+  postToPlugin({ type: 'send-to-claude', mode: 'selection', action: 'edge-cases' });
+}
+
 // ── LAYER RENAME ──
 function renameLayers(type) {
   var btnMap = { 'from-content': 'renameContentBtn', 'clean': 'renameCleanBtn', 'by-type': 'renameTypeBtn', 'number': 'renameNumBtn' };
@@ -1342,8 +1444,23 @@ function renderGoals(project) {
   fill.style.width = pct + '%';
   if (pct === 100 && done > 0) setTimeout(triggerConfetti, 300);
   list.innerHTML = project.goals.map(function(g) {
-    return '<div class="goal-item ' + (g.status === 'done' ? 'done' : '') + '" onclick="toggleGoal(\'' + g.id + '\')">' +
-      '<div class="goal-checkbox"></div><div class="goal-text">' + escHtml(g.text) + '</div></div>';
+    var id = escHtml(g.id);
+    return '<div class="goal-item ' + (g.status === 'done' ? 'done' : '') + '"' +
+      ' draggable="true"' +
+      ' data-goal-id="' + id + '"' +
+      ' ondragstart="onGoalDragStart(event,\'' + id + '\')"' +
+      ' ondragend="onGoalDragEnd(event)"' +
+      ' ondragover="onGoalDragOver(event)"' +
+      ' ondragleave="onGoalDragLeave(event)"' +
+      ' ondrop="onGoalDrop(event,\'' + id + '\')">' +
+      '<div class="goal-drag-handle" title="Drag to reorder">⠿</div>' +
+      '<div class="goal-checkbox" onclick="toggleGoal(\'' + id + '\');event.stopPropagation()"></div>' +
+      '<div class="goal-text">' + escHtml(g.text) + '</div>' +
+      '<div class="goal-hover-actions">' +
+        '<button class="goal-action-btn" onclick="editGoal(\'' + id + '\');event.stopPropagation()" title="Edit">✏️</button>' +
+        '<button class="goal-action-btn del" onclick="removeGoal(\'' + id + '\',event)" title="Remove">🗑️</button>' +
+      '</div>' +
+    '</div>';
   }).join('');
 }
 
@@ -1472,6 +1589,10 @@ window.onmessage = function(event) {
   if (msg.type === 'notion-token-saved') { updateNotionLED(true, null); }
 
   if (msg.type === 'bridge-status') { updateConnectionUI(msg.connected); }
+
+  if (msg.type === 'edge-cases-created') {
+    alert('🧪 ' + msg.count + ' edge cases added as sticky notes on the canvas!');
+  }
 
   if (msg.type === 'claude-data-ready') {
     if (bridgeSocket && bridgeSocket.readyState === WebSocket.OPEN) {
