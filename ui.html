@@ -921,6 +921,12 @@ var notionToken     = '';
 
 // ── BRIDGE ──
 function connectToBridge() {
+  // Close any existing socket cleanly before opening a new one
+  if (bridgeSocket) {
+    bridgeSocket.onclose = null; // prevent the onclose from triggering another retry
+    bridgeSocket.close();
+    bridgeSocket = null;
+  }
   try {
     bridgeSocket = new WebSocket('ws://localhost:3001');
 
@@ -1070,8 +1076,8 @@ function updateNotionLED(connected, title) {
 function refreshStatus() {
   var bridgeDot = document.getElementById('bridgeDot');
   if (bridgeDot) bridgeDot.className = 'dot2 amber';
-  if (!bridgeConnected) connectToBridge();
-  setTimeout(function() { updateConnectionUI(bridgeConnected); }, 3200);
+  bridgeConnected = false;
+  connectToBridge(); // always force a fresh connection attempt
 }
 
 function goToSettings() {
