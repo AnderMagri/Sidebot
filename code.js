@@ -324,6 +324,17 @@ figma.ui.onmessage = async (msg) => {
     figma.ui.postMessage({ type: 'page-scan-data', data: scanData });
   }
 
+  // ── GET DESIGN CONTEXT (for chat) ──
+  if (msg.type === 'get-design-context') {
+    var targets = figma.currentPage.selection.length > 0
+      ? [...figma.currentPage.selection]
+      : figma.currentPage.children.filter(function(n) {
+          return ['FRAME', 'COMPONENT', 'COMPONENT_SET'].includes(n.type);
+        });
+    var data = targets.length > 0 ? deepScanSelection(targets) : null;
+    figma.ui.postMessage({ type: 'design-context-ready', data: data });
+  }
+
   // ── SEND TO CLAUDE (bridge) ──
   if (msg.type === 'send-to-claude') {
     const targets = msg.mode === 'selection'

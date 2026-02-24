@@ -7,14 +7,11 @@
  */
 
 const WebSocket = require('ws');
-const http = require('http');
-const express = require('express');
 const Anthropic = require('@anthropic-ai/sdk');
 const os = require('os');
 const fs = require('fs');
 const path = require('path');
 
-const PORT = 3000;
 const WS_PORT = 3001;
 
 // ─── CONFIG / API KEY PERSISTENCE ───
@@ -191,58 +188,49 @@ async function analyzeEdgeCasesWithClaude(ws, designData) {
   }
 }
 
-// ─── EXPRESS SERVER (for Claude Desktop MCP access) ───
-const app = express();
-app.use(express.json({ limit: '10mb' }));
+// ─── CHAT SYSTEM PROMPT ───
+const CHAT_SYSTEM_PROMPT = `You are Sidebot, an AI design assistant embedded in Figma. You help designers analyze and improve their designs.
 
-// CORS for localhost
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Headers', 'Content-Type');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  if (req.method === 'OPTIONS') return res.sendStatus(200);
-  next();
-});
+When the user sends design data, you have access to text nodes, frame layouts, colors, and spacing.
+- For grammar/spelling: identify specific text nodes with errors
+- For contrast: check WCAG AA compliance (4.5:1 for normal text)
+- For consistency: look for mismatched fonts, spacing, colors
+- For edge cases: think like a developer about what states need handling
 
-// Health check
-app.get('/health', (req, res) => {
-  res.json({
-    status: 'ok',
-    pluginConnected: pluginData.connected,
-    hasApiKey: !!anthropicApiKey,
-    activeProject: pluginData.activeProject?.name || 'None',
-    timestamp: new Date().toISOString()
-  });
-});
+Respond conversationally and concisely. When you identify specific issues, also return them as structured data in your response using a JSON code block.
+Keep responses under 200 words unless the user asks for detail.`;
 
-// Get current plugin state
-app.get('/state', (req, res) => {
-  res.json(pluginData);
-});
+// ─── AI CHAT ───
+async function chatWithClaude(ws, text, history, designData) {
+  console.log(`[AI ] Chat message: "${text.slice(0, 60)}"`);
+  try {
+    const messages = [];
+    history.slice(0, -1).forEach(m => messages.push({ role: m.role, content: m.content }));
+    const contextStr = designData
+      ? `\n\nCurrent Figma selection:\n${JSON.stringify(designData, null, 2)}`
+      : '\n\n(No frame selected — responding without design context)';
+    messages.push({ role: 'user', content: text + contextStr });
 
-// Add goals to project (from Claude Desktop via MCP)
-app.post('/add-goals', (req, res) => {
-  const { projectName, goals, prdText } = req.body;
-  if (!pluginSocket) return res.status(503).json({ error: 'Plugin not connected' });
-  console.log(`[IN ] Claude sending ${goals.length} goals to project: ${projectName}`);
-  pluginSocket.send(JSON.stringify({ type: 'add-goals-from-claude', projectName, goals, prdText }));
-  res.json({ success: true, message: `Sent ${goals.length} goals to plugin` });
-});
+    const response = await anthropic.messages.create({
+      model: 'claude-haiku-4-5',
+      max_tokens: 1024,
+      system: CHAT_SYSTEM_PROMPT,
+      messages
+    });
 
-// Add fixes to project (from Claude Desktop via MCP)
-app.post('/add-fixes', (req, res) => {
-  const { projectName, fixes } = req.body;
-  if (!pluginSocket) return res.status(503).json({ error: 'Plugin not connected' });
-  console.log(`[IN ] Claude sending ${fixes.length} fixes to project: ${projectName}`);
-  pluginSocket.send(JSON.stringify({ type: 'add-fixes-from-claude', projectName, fixes }));
-  res.json({ success: true, message: `Sent ${fixes.length} fixes to plugin` });
-});
+    const responseText = response.content[0].text.trim();
+    const jsonMatch = responseText.match(/```json\s*(\[[\s\S]*?\])\s*```/);
+    const fixes = jsonMatch ? JSON.parse(jsonMatch[1]) : [];
+    const cleanText = responseText.replace(/```json[\s\S]*?```/g, '').trim();
 
-// Get design data
-app.get('/design-data', (req, res) => {
-  if (!pluginData.lastDesignData) return res.status(404).json({ error: 'No design data available' });
-  res.json(pluginData.lastDesignData);
-});
+    ws.send(JSON.stringify({ type: 'chat-response', text: cleanText, fixes }));
+    console.log(`[AI ] Chat response sent (${response.usage.output_tokens} tokens)`);
+
+  } catch (err) {
+    console.error('[AI ] Chat error:', err.message);
+    ws.send(JSON.stringify({ type: 'chat-response', text: `Error: ${err.message}. Check your API key in Settings.`, fixes: [] }));
+  }
+}
 
 // ─── WEBSOCKET SERVER (for Plugin connection) ───
 const wss = new WebSocket.Server({ port: WS_PORT });
@@ -294,6 +282,15 @@ wss.on('connection', (ws) => {
       if (message.type === 'state-update') {
         pluginData.projects      = message.projects      || [];
         pluginData.activeProject = message.activeProject || null;
+      }
+
+      // ─ Chat message ─
+      if (message.type === 'chat-message') {
+        if (anthropic) {
+          chatWithClaude(ws, message.text, message.history || [], message.designData);
+        } else {
+          ws.send(JSON.stringify({ type: 'chat-response', text: 'No API key configured. Go to Settings tab and paste your Anthropic API key.', fixes: [] }));
+        }
       }
 
       // ─ Design data — auto-trigger AI if a Fixes action is attached ─
@@ -350,41 +347,25 @@ wss.on('connection', (ws) => {
   });
 });
 
-// ─── START HTTP SERVER ───
-const httpServer = app.listen(PORT, () => {
-  console.log('');
-  console.log('===========================================');
-  console.log('  SIDEBOT BRIDGE SERVER');
-  console.log('===========================================');
-  console.log('');
-  console.log('[HTTP] http://localhost:' + PORT);
-  console.log('[WS ] ws://localhost:' + WS_PORT);
-  console.log('[AI ] ' + (anthropicApiKey ? 'Anthropic key configured' : 'no key — enter in plugin Settings tab'));
-  console.log('');
-  console.log('Waiting for Figma plugin to connect...');
-  console.log('');
-  console.log('Press Ctrl+C to stop  |  Close this window to stop');
-  console.log('===========================================');
-  console.log('');
-});
-
-httpServer.on('error', (err) => {
-  if (err.code === 'EADDRINUSE') {
-    console.error('');
-    console.error('[ERR] Port ' + PORT + ' is already in use.');
-    console.error('      Another copy of the bridge may already be running.');
-    console.error('      Close it first, then try again.');
-    console.error('');
-    process.exit(1);
-  }
-});
+console.log('');
+console.log('===========================================');
+console.log('  SIDEBOT BRIDGE SERVER');
+console.log('===========================================');
+console.log('');
+console.log('[WS ] ws://localhost:' + WS_PORT);
+console.log('[AI ] ' + (anthropicApiKey ? 'Anthropic key configured' : 'no key — enter in plugin Settings tab'));
+console.log('');
+console.log('Waiting for Figma plugin to connect...');
+console.log('');
+console.log('Press Ctrl+C to stop  |  Close this window to stop');
+console.log('===========================================');
+console.log('');
 
 // ─── GRACEFUL SHUTDOWN ───
 process.on('SIGINT', () => {
   console.log('\nShutting down bridge server...');
   if (pluginSocket) pluginSocket.close();
-  wss.close();
-  httpServer.close(() => {
+  wss.close(() => {
     console.log('Server stopped.');
     process.exit(0);
   });
