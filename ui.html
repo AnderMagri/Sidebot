@@ -430,6 +430,37 @@ textarea {
 /* ─── RENAME STATUS ─── */
 .rename-status { margin-top: 10px; font-size: 10px; line-height: 1.6; display: none; }
 
+/* ─── FIXES TAB FLEX LAYOUT (list on top, floating button at bottom) ─── */
+#fixes-content.active { display: flex; flex-direction: column; padding: 0; overflow: hidden; }
+.fixes-scroll-area { flex: 1; overflow-y: auto; padding: 16px; padding-bottom: 8px; }
+.fixes-scroll-area::-webkit-scrollbar { width: 6px; }
+.fixes-scroll-area::-webkit-scrollbar-track { background: #1a1a1a; }
+.fixes-scroll-area::-webkit-scrollbar-thumb { background: #3a3a3a; border-radius: 3px; }
+.fixes-bottom-bar { flex-shrink: 0; padding: 10px 16px 14px; background: linear-gradient(transparent, #1a1a1a 25%); }
+.fixes-bottom-btn {
+  width: 100%; padding: 12px; background: #2a2a2a; border: 1px solid #7B4FBE;
+  border-radius: 8px; color: #fff; font-size: 12px; font-weight: 600;
+  cursor: pointer; transition: all 0.2s; display: flex; align-items: center;
+  justify-content: center; gap: 8px;
+}
+.fixes-bottom-btn:hover { background: #7B4FBE; transform: translateY(-1px); }
+
+/* ─── API KEY INLINE ROW (in settings LED section) ─── */
+.api-key-row {
+  display: flex; gap: 6px; padding: 8px 12px 10px;
+  background: #1a1a1a; border: 1px solid #333; border-top: none;
+  border-radius: 0 0 6px 6px; margin-top: -4px; align-items: center;
+}
+.api-key-row input {
+  flex: 1; margin-bottom: 0; padding: 6px 8px; font-size: 11px;
+  background: #222; border-color: #3a3a3a; border-radius: 4px;
+}
+.api-key-save   { padding: 6px 12px; background: #7B4FBE; color: #fff; border: none; border-radius: 4px; font-size: 10px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+.api-key-save:hover { background: #6a3fa8; }
+.api-key-delete { padding: 6px 10px; background: transparent; color: #ff6b6b; border: 1px solid #ff6b6b; border-radius: 4px; font-size: 10px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+.api-key-delete:hover { background: #ff6b6b22; }
+.status-row-has-input { border-radius: 6px 6px 0 0; border-bottom: none; }
+
 /* ─── SCROLLBAR ─── */
 .tab-content::-webkit-scrollbar { width: 6px; }
 .tab-content::-webkit-scrollbar-track { background: #1a1a1a; }
@@ -496,7 +527,7 @@ textarea {
   <!-- Ask Claude button -->
   <button class="ask-claude-btn offline" id="askClaudeBtn" onclick="askClaude()">
     <span>🤖</span>
-    <span id="askClaudeBtnLabel">Ask Claude — Bridge offline</span>
+    <span id="askClaudeBtnLabel">Ask Claude to Add Project — Bridge offline</span>
   </button>
 
   <!-- Project list -->
@@ -537,7 +568,7 @@ Return format: {"projectName": "...", "goals": ["...", "..."]}</textarea>
     </div>
     <div class="sheet-body">
       <div class="section-desc" style="line-height:1.6;">
-        Create an integration token at <strong style="color:#fff;">notion.so/my-integrations</strong>, then share your PRD page with it.
+        Create an integration token at <a href="https://www.notion.so/my-integrations" target="_blank" style="color:#60a5fa;text-decoration:underline;font-weight:600;">notion.so/my-integrations</a>, then share your PRD page with it.
       </div>
       <input type="password" id="notionTokenInput" placeholder="secret_xxxxxxxxxxxxx" autocomplete="off">
       <button class="btn-primary" onclick="saveNotionToken()">Save Token</button>
@@ -583,62 +614,74 @@ Return format: {"projectName": "...", "goals": ["...", "..."]}</textarea>
 <!-- ══════════════ FIXES TAB ══════════════ -->
 <div class="tab-content" id="fixes-content">
 
-  <!-- Quick Actions -->
-  <div class="fixes-actions-section">
-    <div class="section-title">🔍 Quick Actions</div>
-    <div class="section-desc">Select a frame, then click an action below</div>
-    <div class="action-buttons">
-      <button class="action-btn" onclick="checkGrammar()">
-        <span class="action-icon">🔤</span>
-        <span class="action-label">Check Grammar</span>
-      </button>
-      <button class="action-btn" onclick="checkAutoLayout()">
-        <span class="action-icon">📐</span>
-        <span class="action-label">Auto-layout</span>
-      </button>
-      <button class="action-btn" onclick="checkContrast()">
-        <span class="action-icon">🎨</span>
-        <span class="action-label">Contrast</span>
-      </button>
-      <button class="action-btn" onclick="checkPRD()">
-        <span class="action-icon">📋</span>
-        <span class="action-label">PRD Coverage</span>
-      </button>
-    </div>
-  </div>
-
-  <!-- Layer Tools -->
-  <div class="fixes-actions-section">
-    <div class="section-title">✏️ Layer Tools</div>
-    <div class="section-desc">Renames layers in selection (or full page if nothing selected)</div>
-    <div class="action-buttons">
-      <button class="action-btn" id="renameContentBtn" onclick="renameLayers('from-content')">
-        <span class="action-icon">📝</span>
-        <span class="action-label">From Content</span>
-      </button>
-      <button class="action-btn" id="renameCleanBtn" onclick="renameLayers('clean')">
-        <span class="action-icon">🧹</span>
-        <span class="action-label">Clean Names</span>
-      </button>
-      <button class="action-btn" id="renameTypeBtn" onclick="renameLayers('by-type')">
-        <span class="action-icon">🏷️</span>
-        <span class="action-label">By Type</span>
-      </button>
-      <button class="action-btn" id="renameNumBtn" onclick="renameLayers('number')">
-        <span class="action-icon">🔢</span>
-        <span class="action-label">Add Numbers</span>
-      </button>
-    </div>
-    <div class="rename-status" id="renameStatus"></div>
-  </div>
-
-  <!-- Issues -->
-  <div>
+  <!-- Scrollable area: issues list -->
+  <div class="fixes-scroll-area">
     <div class="section-title">📝 Issues Found</div>
     <div class="fix-list" id="fixList"></div>
     <div class="empty-state" id="fixesEmpty">
       <div class="empty-icon">✅</div>
-      <div class="empty-text">No issues found yet.<br>Use quick actions above or ask Claude to review.</div>
+      <div class="empty-text">No issues yet.<br>Use Quick Actions to check your design.</div>
+    </div>
+  </div>
+
+  <!-- Floating bottom button -->
+  <div class="fixes-bottom-bar">
+    <button class="fixes-bottom-btn" onclick="openFixesActions()">
+      <span>🔍</span><span>Quick Actions</span>
+    </button>
+  </div>
+</div>
+
+<!-- Fixes Actions Bottom Sheet -->
+<div class="bottom-sheet" id="fixesActionsSheet">
+  <div class="bottom-sheet-overlay" onclick="closeFixesActions()"></div>
+  <div class="bottom-sheet-content">
+    <div class="sheet-header">
+      <div class="sheet-title">🔍 Quick Actions</div>
+      <button class="sheet-close" onclick="closeFixesActions()">✕</button>
+    </div>
+    <div class="sheet-body">
+
+      <!-- Design Checks -->
+      <div class="section-title">Design Checks</div>
+      <div class="section-desc">Select a frame, then click an action. Results will appear in the Fixes tab.</div>
+      <div class="action-buttons" style="margin-bottom:20px;">
+        <button class="action-btn" onclick="checkGrammar()">
+          <span class="action-icon">🔤</span>
+          <span class="action-label">Check Grammar</span>
+        </button>
+        <button class="action-btn" onclick="checkContrast()">
+          <span class="action-icon">🎨</span>
+          <span class="action-label">Contrast</span>
+        </button>
+        <button class="action-btn" onclick="checkConsistency()" style="grid-column:1/-1;">
+          <span class="action-icon">📐</span>
+          <span class="action-label">Check Consistency — positions, fonts, styles</span>
+        </button>
+      </div>
+
+      <!-- Layer Tools -->
+      <div class="section-title">✏️ Layer Tools</div>
+      <div class="section-desc">Renames layers in selection (or full page if nothing selected)</div>
+      <div class="action-buttons">
+        <button class="action-btn" id="renameContentBtn" onclick="renameLayers('from-content')">
+          <span class="action-icon">📝</span>
+          <span class="action-label">From Content</span>
+        </button>
+        <button class="action-btn" id="renameCleanBtn" onclick="renameLayers('clean')">
+          <span class="action-icon">🧹</span>
+          <span class="action-label">Clean Names</span>
+        </button>
+        <button class="action-btn" id="renameTypeBtn" onclick="renameLayers('by-type')">
+          <span class="action-icon">🏷️</span>
+          <span class="action-label">By Type</span>
+        </button>
+        <button class="action-btn" id="renameNumBtn" onclick="renameLayers('number')">
+          <span class="action-icon">🔢</span>
+          <span class="action-label">Add Numbers</span>
+        </button>
+      </div>
+      <div class="rename-status" id="renameStatus" style="margin-top:10px;"></div>
     </div>
   </div>
 </div>
@@ -661,15 +704,26 @@ Return format: {"projectName": "...", "goals": ["...", "..."]}</textarea>
     </div>
 
     <div class="status-rows">
-      <div class="status-row">
+
+      <!-- Claude API row + inline key input -->
+      <div class="status-row status-row-has-input">
         <div class="status-row-left">
-          <div class="status-row-name">Plugin</div>
-          <div class="status-row-sub">Running inside Figma</div>
+          <div class="status-row-name">Claude API</div>
+          <div class="status-row-sub" id="claudeApiSub">No key saved</div>
         </div>
-        <div class="led-chip"><div class="dot2 green"></div>Active</div>
+        <div class="led-chip">
+          <div class="dot2 red" id="claudeApiDot"></div>
+          <span id="claudeApiLedText">Not set</span>
+        </div>
+      </div>
+      <div class="api-key-row">
+        <input type="password" id="claudeApiInput" placeholder="sk-ant-api03-…" autocomplete="off">
+        <button class="api-key-save" onclick="saveClaudeApiKey()">Save</button>
+        <button class="api-key-delete" id="claudeApiDeleteBtn" style="display:none;" onclick="deleteClaudeApiKey()">Delete</button>
       </div>
 
-      <div class="status-row">
+      <!-- Bridge Server row -->
+      <div class="status-row" style="margin-top:6px;">
         <div class="status-row-left">
           <div class="status-row-name">Bridge Server</div>
           <div class="status-row-sub" id="bridgeSubText">Not running</div>
@@ -680,7 +734,8 @@ Return format: {"projectName": "...", "goals": ["...", "..."]}</textarea>
         </div>
       </div>
 
-      <div class="status-row">
+      <!-- Notion row + inline token input -->
+      <div class="status-row status-row-has-input" style="margin-top:6px;">
         <div class="status-row-left">
           <div class="status-row-name">Notion</div>
           <div class="status-row-sub" id="notionSubText">Token not set</div>
@@ -690,8 +745,14 @@ Return format: {"projectName": "...", "goals": ["...", "..."]}</textarea>
           <span id="notionLedText">Setup needed</span>
         </div>
       </div>
+      <div class="api-key-row">
+        <input type="password" id="notionTokenSettingsInput" placeholder="secret_…" autocomplete="off">
+        <button class="api-key-save" onclick="saveNotionTokenInline()">Save</button>
+        <button class="api-key-delete" id="notionDeleteBtn" style="display:none;" onclick="deleteNotionToken()">Delete</button>
+      </div>
 
-      <div class="status-row">
+      <!-- Figma MCP Connector row -->
+      <div class="status-row" style="margin-top:6px;">
         <div class="status-row-left">
           <div class="status-row-name">Figma MCP Connector</div>
           <div class="status-row-sub">Claude Desktop → Settings → Connectors</div>
@@ -904,10 +965,10 @@ function updateConnectionUI(connected) {
   var label = document.getElementById('askClaudeBtnLabel');
   if (connected) {
     btn.className     = 'ask-claude-btn online';
-    label.textContent = 'Ask Claude to Review';
+    label.textContent = 'Ask Claude to Add Project';
   } else {
     btn.className     = 'ask-claude-btn offline';
-    label.textContent = 'Ask Claude — Bridge offline';
+    label.textContent = 'Ask Claude to Add Project — Bridge offline';
   }
 
   // Settings: mode badge
@@ -964,13 +1025,11 @@ function goToSettings() {
   document.querySelector('[data-tab="settings"]').click();
 }
 
-// ── ASK CLAUDE ──
+// ── ASK CLAUDE (adds project) ──
 function askClaude() {
-  if (!bridgeConnected) {
-    alert('⚠️ Bridge offline.\n\nDownload and open SidebotBridge.app first, then come back here.\n\nFind it in Settings → Download SidebotBridge.app');
-    return;
-  }
-  postToPlugin({ type: 'send-to-claude', mode: 'page' });
+  // Always open the Add Project sheet (works both online and offline).
+  // No design data is sent automatically — the user controls what to send from inside the sheet.
+  openAddProject();
 }
 
 // ── NOTION ──
@@ -1174,11 +1233,65 @@ function sendToClaude(mode) {
   postToPlugin({ type: 'send-to-claude', mode: mode });
 }
 
+// ── FIXES ACTIONS SHEET ──
+function openFixesActions()  { document.getElementById('fixesActionsSheet').classList.add('open'); }
+function closeFixesActions() { document.getElementById('fixesActionsSheet').classList.remove('open'); }
+
 // ── QUICK ACTIONS ──
-function checkGrammar()    { postToPlugin({ type: 'send-to-claude', mode: 'selection', action: 'grammar' });    alert('📋 Paste in Claude Desktop:\n"Check grammar and spelling in my selected design"'); }
-function checkAutoLayout() { postToPlugin({ type: 'send-to-claude', mode: 'selection', action: 'autolayout' }); alert('📋 Paste in Claude Desktop:\n"Check auto-layout setup and suggest improvements"'); }
-function checkContrast()   { postToPlugin({ type: 'send-to-claude', mode: 'selection', action: 'contrast' });   alert('📋 Paste in Claude Desktop:\n"Check color contrast ratios for accessibility (WCAG AA)"'); }
-function checkPRD()        { postToPlugin({ type: 'send-to-claude', mode: 'selection', action: 'prd' });        alert('📋 Paste in Claude Desktop:\n"Check my design against the PRD requirements"'); }
+function checkGrammar()      { closeFixesActions(); postToPlugin({ type: 'send-to-claude', mode: 'selection', action: 'grammar' });      alert('📋 Paste in Claude Desktop:\n"Check grammar and spelling in my selected design"'); }
+function checkContrast()     { closeFixesActions(); postToPlugin({ type: 'send-to-claude', mode: 'selection', action: 'contrast' });     alert('📋 Paste in Claude Desktop:\n"Check color contrast ratios for accessibility (WCAG AA)"'); }
+function checkConsistency()  { closeFixesActions(); postToPlugin({ type: 'send-to-claude', mode: 'selection', action: 'consistency' }); alert('📋 Paste in Claude Desktop:\n"Check this design for inconsistencies — positions, font styles, spacing and colour tokens that are out of the design system"'); }
+
+// ── CLAUDE API KEY ──
+function saveClaudeApiKey() {
+  var key = document.getElementById('claudeApiInput').value.trim();
+  if (!key) return;
+  postToPlugin({ type: 'save-claude-api-key', key: key });
+  document.getElementById('claudeApiInput').value = '';
+  updateClaudeApiLED(true, key);
+}
+function deleteClaudeApiKey() {
+  if (!confirm('Remove saved Claude API key?')) return;
+  postToPlugin({ type: 'delete-claude-api-key' });
+  updateClaudeApiLED(false, null);
+}
+function updateClaudeApiLED(hasKey, key) {
+  var dot  = document.getElementById('claudeApiDot');
+  var text = document.getElementById('claudeApiLedText');
+  var sub  = document.getElementById('claudeApiSub');
+  var del  = document.getElementById('claudeApiDeleteBtn');
+  if (hasKey) {
+    dot.className  = 'dot2 green';
+    text.textContent = 'Set';
+    sub.textContent  = key ? 'sk-ant-…' + key.slice(-4) : 'Key saved';
+    if (del) del.style.display = 'inline-block';
+  } else {
+    dot.className  = 'dot2 red';
+    text.textContent = 'Not set';
+    sub.textContent  = 'No key saved';
+    if (del) del.style.display = 'none';
+  }
+}
+
+// ── NOTION TOKEN (inline settings) ──
+function saveNotionTokenInline() {
+  var raw = document.getElementById('notionTokenSettingsInput').value.trim();
+  if (!raw || raw.indexOf('••••') === 0) return;
+  notionToken = raw;
+  postToPlugin({ type: 'save-notion-token', token: raw });
+  document.getElementById('notionTokenSettingsInput').value = '';
+  updateNotionLED(true, null);
+  var del = document.getElementById('notionDeleteBtn');
+  if (del) del.style.display = 'inline-block';
+}
+function deleteNotionToken() {
+  if (!confirm('Remove saved Notion token?')) return;
+  notionToken = '';
+  postToPlugin({ type: 'save-notion-token', token: '' });
+  updateNotionLED(false, null);
+  var del = document.getElementById('notionDeleteBtn');
+  if (del) del.style.display = 'none';
+}
 
 // ── LAYER RENAME ──
 function renameLayers(type) {
@@ -1285,7 +1398,13 @@ window.onmessage = function(event) {
   if (msg.type === 'projects-loaded' || msg.type === 'init-complete') {
     allProjects    = msg.projects || [];
     currentProject = msg.activeProject;
-    if (msg.notionToken) { notionToken = msg.notionToken; updateNotionLED(true, null); }
+    if (msg.notionToken) {
+      notionToken = msg.notionToken;
+      updateNotionLED(true, null);
+      var del = document.getElementById('notionDeleteBtn');
+      if (del) del.style.display = 'inline-block';
+    }
+    if (msg.claudeApiKey) { updateClaudeApiLED(true, msg.claudeApiKey); }
     renderProjects(allProjects, currentProject);
     renderGoals(currentProject);
     renderFixes(currentProject);
