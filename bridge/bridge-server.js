@@ -94,7 +94,18 @@ If no issues found, return [].`,
   contrast: `Analyze the Figma design data below for color contrast and accessibility issues.
 Return ONLY a valid JSON array. Each item must have exactly these fields:
 [{"nodeId": "...", "nodeName": "...", "issue": "contrast problem", "suggestion": "recommended color fix"}]
-If no issues found, return [].`
+If no issues found, return [].`,
+
+  consistency: `Analyze the Figma design data below for visual consistency issues — elements that don't align to a shared grid, font styles inconsistent with the design system, spacing or colour values that vary unexpectedly across similar elements.
+Return ONLY a valid JSON array. Each item must have exactly these fields:
+[{"nodeId": "...", "nodeName": "...", "issue": "consistency problem", "suggestion": "recommended fix"}]
+If no issues found, return [].`,
+
+  'edge-cases': `You are reviewing a Figma screen design. List all edge cases a developer must handle for this screen.
+Cover: empty states, loading states, error states, boundary/extreme inputs, long text overflow, offline/network errors, permission errors, and accessibility edge cases.
+Return ONLY a JSON array of plain strings, one edge case per item (no nested objects):
+["Edge case description 1", "Edge case description 2", ...]
+Return between 5 and 15 items.`
 };
 
 // ─── AI ANALYSIS ───
@@ -139,6 +150,43 @@ async function analyzeDesignWithClaude(ws, designData, action) {
         issue: `Analysis failed: ${err.message}`,
         description: 'Check your API key in the plugin Settings tab'
       }]
+    }));
+  }
+}
+
+// ─── AI EDGE CASES ───
+async function analyzeEdgeCasesWithClaude(ws, designData) {
+  const prompt = PROMPTS['edge-cases'];
+  console.log(`[AI ] Analyzing edge cases for: ${designData.projectName || 'unknown'}`);
+
+  try {
+    const response = await anthropic.messages.create({
+      model: 'claude-haiku-4-5',
+      max_tokens: 2048,
+      messages: [{
+        role: 'user',
+        content: `${prompt}\n\nDesign data:\n${JSON.stringify(designData, null, 2)}`
+      }]
+    });
+
+    const text = response.content[0].text.trim();
+    const jsonMatch = text.match(/\[[\s\S]*\]/);
+    const cases = jsonMatch ? JSON.parse(jsonMatch[0]) : [];
+
+    ws.send(JSON.stringify({
+      type: 'add-edge-cases-from-claude',
+      cases: cases,
+      frameName: designData.projectName || 'Screen'
+    }));
+
+    console.log(`[AI ] Sent ${cases.length} edge case(s)`);
+
+  } catch (err) {
+    console.error('[AI ] Error:', err.message);
+    ws.send(JSON.stringify({
+      type: 'add-edge-cases-from-claude',
+      cases: [`Analysis failed: ${err.message}. Check your API key in the plugin Settings tab.`],
+      frameName: 'Error'
     }));
   }
 }
@@ -254,9 +302,20 @@ wss.on('connection', (ws) => {
         console.log('[DATA] Design data stored: ' + message.data.mode);
 
         const action = message.data.action;
-        const fixesActions = ['grammar', 'autolayout', 'alignment', 'contrast'];
+        const fixesActions = ['grammar', 'autolayout', 'alignment', 'contrast', 'consistency'];
 
-        if (action && fixesActions.includes(action)) {
+        if (action === 'edge-cases') {
+          if (anthropic) {
+            analyzeEdgeCasesWithClaude(ws, message.data);
+          } else {
+            console.log('[AI ] No API key configured — cannot analyze');
+            ws.send(JSON.stringify({
+              type: 'add-edge-cases-from-claude',
+              cases: ['No Anthropic API key configured. Go to Settings tab and paste your key from console.anthropic.com.'],
+              frameName: 'Error'
+            }));
+          }
+        } else if (action && fixesActions.includes(action)) {
           if (anthropic) {
             analyzeDesignWithClaude(ws, message.data, action);
           } else {

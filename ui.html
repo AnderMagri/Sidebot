@@ -925,10 +925,10 @@ function connectToBridge() {
     bridgeSocket = new WebSocket('ws://localhost:3001');
 
     bridgeSocket.onopen = function() {
-      bridgeConnected = true;
-      updateConnectionUI(true);
-      postToPlugin({ type: 'connect-to-bridge', connected: true });
-      sendStateToBridge();
+      // Don't mark connected yet — wait for connection-established from the real bridge
+      window._bridgeHandshakeTimeout = setTimeout(function() {
+        if (!bridgeConnected && bridgeSocket) bridgeSocket.close();
+      }, 3000);
     };
 
     bridgeSocket.onmessage = function(event) {
@@ -949,6 +949,19 @@ function connectToBridge() {
 }
 
 function handleBridgeMessage(message) {
+  if (message.type === 'connection-established') {
+    clearTimeout(window._bridgeHandshakeTimeout);
+    bridgeConnected = true;
+    updateConnectionUI(true);
+    postToPlugin({ type: 'connect-to-bridge', connected: true });
+    sendStateToBridge();
+    // Forward stored API key to bridge so it can call Claude immediately
+    if (window._storedClaudeApiKey && bridgeSocket && bridgeSocket.readyState === WebSocket.OPEN) {
+      bridgeSocket.send(JSON.stringify({ type: 'set-api-key', key: window._storedClaudeApiKey }));
+    }
+    return;
+  }
+
   if (message.type === 'add-goals-from-claude') {
     var existing = allProjects.find(function(p) { return p.name === message.projectName; });
     if (existing) {
@@ -1280,13 +1293,25 @@ function closeFixesActions() { document.getElementById('fixesActionsSheet').clas
 // ── QUICK ACTIONS ──
 function checkGrammar()      { closeFixesActions(); postToPlugin({ type: 'send-to-claude', mode: 'selection', action: 'grammar' });      alert('📋 Paste in Claude Desktop:\n"Check grammar and spelling in my selected design"'); }
 function checkContrast()     { closeFixesActions(); postToPlugin({ type: 'send-to-claude', mode: 'selection', action: 'contrast' });     alert('📋 Paste in Claude Desktop:\n"Check color contrast ratios for accessibility (WCAG AA)"'); }
-function checkConsistency()  { closeFixesActions(); postToPlugin({ type: 'send-to-claude', mode: 'selection', action: 'consistency' }); alert('📋 Paste in Claude Desktop:\n"Check this design for inconsistencies — positions, font styles, spacing and colour tokens that are out of the design system"'); }
+function checkConsistency() {
+  closeFixesActions();
+  if (!bridgeConnected) {
+    alert('📋 Paste in Claude Desktop:\n"Check this design for inconsistencies — positions, font styles, spacing and colour tokens that are out of the design system"');
+    return;
+  }
+  postToPlugin({ type: 'send-to-claude', mode: 'selection', action: 'consistency' });
+}
 
 // ── CLAUDE API KEY ──
 function saveClaudeApiKey() {
   var key = document.getElementById('claudeApiInput').value.trim();
   if (!key) return;
+  window._storedClaudeApiKey = key;  // keep for reconnect forwarding
   postToPlugin({ type: 'save-claude-api-key', key: key });
+  // Forward to bridge immediately if already connected
+  if (bridgeConnected && bridgeSocket && bridgeSocket.readyState === WebSocket.OPEN) {
+    bridgeSocket.send(JSON.stringify({ type: 'set-api-key', key: key }));
+  }
   document.getElementById('claudeApiInput').value = '';
   updateClaudeApiLED(true, key);
 }
@@ -1526,7 +1551,7 @@ window.onmessage = function(event) {
       var del = document.getElementById('notionDeleteBtn');
       if (del) del.style.display = 'inline-block';
     }
-    if (msg.claudeApiKey) { updateClaudeApiLED(true, msg.claudeApiKey); }
+    if (msg.claudeApiKey) { window._storedClaudeApiKey = msg.claudeApiKey; updateClaudeApiLED(true, msg.claudeApiKey); }
     renderProjects(allProjects, currentProject);
     renderGoals(currentProject);
     renderFixes(currentProject);
