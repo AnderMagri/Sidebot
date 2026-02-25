@@ -497,6 +497,16 @@ textarea {
 .chat-annotate-btn { margin-top: 5px; background: #d97706; border: 1px solid #f59e0b; color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 9px; cursor: pointer; }
 .chat-annotate-btn:hover { background: #b45309; }
 .chat-annotate-btn:disabled { background: #2a2a2a; border-color: #444; color: #555; cursor: default; }
+.chat-goal-btn { margin-top: 5px; background: #059669; border: 1px solid #10b981; color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 9px; cursor: pointer; }
+.chat-goal-btn:hover { background: #047857; }
+.chat-goal-btn:disabled { background: #2a2a2a; border-color: #444; color: #555; cursor: default; }
+.typing-dots span { display: inline-block; animation: dotBounce 1.4s infinite both; }
+.typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+.typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes dotBounce {
+  0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
+  40% { transform: translateY(-3px); opacity: 1; }
+}
 .chat-input-bar { display: flex; align-items: flex-end; gap: 6px; padding: 8px 12px; border-top: 1px solid #2a2a2a; flex-shrink: 0; }
 .chat-input { flex: 1; background: #2a2a2a; border: 1px solid #3a3a3a; border-radius: 8px; color: #fff; font-size: 11px; padding: 7px 10px; resize: none; font-family: inherit; max-height: 80px; overflow-y: auto; line-height: 1.5; }
 .chat-input:focus { outline: none; border-color: #555; }
@@ -1427,13 +1437,21 @@ function chatShortcut(action) {
   startChatSend(text, action);
 }
 
+function renderMarkdown(text) {
+  return escHtml(text)
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/^- (.+)$/gm, '• $1')
+    .replace(/\n/g, '<br>');
+}
+
 function addChatBubble(role, text, fixes) {
   var empty = document.getElementById('chatEmpty');
   if (empty) empty.style.display = 'none';
   var msgs = document.getElementById('chatMessages');
   var div = document.createElement('div');
   div.className = 'chat-bubble ' + role;
-  div.innerHTML = escHtml(text).replace(/\n/g, '<br>');
+  div.innerHTML = renderMarkdown(text);
   if (fixes && fixes.length) {
     fixes.forEach(function(f) {
       var card = document.createElement('div');
@@ -1478,6 +1496,21 @@ function addChatBubble(role, text, fixes) {
           };
         })(f, annoBtn);
         card.appendChild(annoBtn);
+      } else if (f.type === 'goal') {
+        // Goal suggestion — let user add it to their goals list
+        issueEl.textContent = '🎯 ' + (f.text || '');
+        detailEl.textContent = f.category || '';
+        var goalBtn = document.createElement('button');
+        goalBtn.className = 'chat-goal-btn';
+        goalBtn.textContent = 'Add to Goals 🎯';
+        goalBtn.onclick = (function(fix, btn) {
+          return function() {
+            btn.textContent = 'Adding…'; btn.disabled = true;
+            postToPlugin({ type: 'chat-add-goal', text: fix.text, category: fix.category || 'general' });
+            setTimeout(function() { btn.textContent = 'Added ✓'; }, 500);
+          };
+        })(f, goalBtn);
+        card.appendChild(goalBtn);
       } else {
         // Generic — just mark as done in the UI
         var doneBtn = document.createElement('button');
@@ -1500,7 +1533,7 @@ function addTypingIndicator() {
   var id = 'typing-' + Date.now();
   div.id = id;
   div.className = 'chat-bubble assistant typing';
-  div.textContent = 'Claude is thinking…';
+  div.innerHTML = 'Claude is thinking<span class="typing-dots"><span>.</span><span>.</span><span>.</span></span>';
   msgs.appendChild(div);
   msgs.scrollTop = msgs.scrollHeight;
   return id;

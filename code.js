@@ -431,6 +431,33 @@ figma.ui.onmessage = async (msg) => {
     }
   }
 
+  // ── CHAT ADD GOAL ──
+  if (msg.type === 'chat-add-goal') {
+    try {
+      const projects = await figma.clientStorage.getAsync(STORAGE.PROJECTS) || [];
+      const activeId = await figma.clientStorage.getAsync(STORAGE.ACTIVE_PROJECT);
+      const project  = projects.find(p => p.id === activeId);
+      if (project) {
+        project.goals = project.goals || [];
+        project.goals.push({
+          id:       `goal-${Date.now()}`,
+          text:     msg.text || '',
+          status:   'pending',
+          addedAt:  new Date().toISOString(),
+          category: msg.category || 'general'
+        });
+        await figma.clientStorage.setAsync(STORAGE.PROJECTS, projects);
+        await saveState();
+        figma.ui.postMessage({ type: 'goals-updated', project });
+        figma.notify('✓ Goal added to ' + project.name);
+      } else {
+        figma.notify('⚠️ No active project — create one in the Projects tab first');
+      }
+    } catch (e) {
+      figma.notify('⚠️ ' + e.message);
+    }
+  }
+
   // ── ANNOTATE NODE ──
   if (msg.type === 'annotate-node') {
     try {
