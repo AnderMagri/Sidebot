@@ -202,8 +202,8 @@ Keep responses under 200 words unless the user asks for detail.`;
 
 // ─── AI CHAT ───
 async function chatWithClaude(ws, text, history, designData, screenshotBase64) {
-  console.log(`[AI ] Chat message: "${text.slice(0, 60)}" ${screenshotBase64 ? '(+screenshot)' : ''}`);
   try {
+    console.log(`[AI ] Chat message: "${(text || '').slice(0, 60)}" ${screenshotBase64 ? '(+screenshot)' : ''}`);
     const messages = [];
     history.slice(0, -1).forEach(m => messages.push({ role: m.role, content: m.content }));
 
@@ -303,6 +303,7 @@ wss.on('connection', (ws) => {
 
       // ─ Chat message ─
       if (message.type === 'chat-message') {
+        console.log('[CHAT] anthropic ready:', !!anthropic, '| text:', JSON.stringify((message.text || '').slice(0, 40)));
         if (anthropic) {
           chatWithClaude(ws, message.text, message.history || [], message.designData, message.screenshot || null);
         } else {
