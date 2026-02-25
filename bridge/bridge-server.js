@@ -277,10 +277,28 @@ async function chatWithClaude(ws, text, history, designData, screenshotBase64) {
     });
 
     const responseText = response.content[0].text.trim();
-    const jsonMatch = responseText.match(/```json\s*(\[[\s\S]*?\])\s*```/);
-    const fixes = jsonMatch ? JSON.parse(jsonMatch[1]) : [];
-    const cleanText = responseText.replace(/```json[\s\S]*?```/g, '').trim();
+    console.log(`[AI ] Raw response (first 200): ${responseText.slice(0, 200)}`);
 
+    let fixes = [];
+    let cleanText = responseText;
+
+    // 1st try: fenced ```json [...] ``` block
+    const fencedMatch = responseText.match(/```(?:json)?\s*(\[[\s\S]*?\])\s*```/);
+    if (fencedMatch) {
+      try { fixes = JSON.parse(fencedMatch[1]); } catch(e) { console.warn('[AI ] JSON parse failed (fenced):', e.message); }
+      cleanText = responseText.replace(/```(?:json)?[\s\S]*?```/g, '').trim();
+    } else {
+      // 2nd try: bare JSON array of objects anywhere in the response
+      const bareMatch = responseText.match(/(\[\s*\{[\s\S]*?\}\s*\])/);
+      if (bareMatch) {
+        try {
+          fixes = JSON.parse(bareMatch[1]);
+          cleanText = responseText.replace(bareMatch[1], '').trim();
+        } catch(e) { console.warn('[AI ] JSON parse failed (bare):', e.message); }
+      }
+    }
+
+    console.log(`[AI ] Parsed ${fixes.length} fix(es) from response`);
     ws.send(JSON.stringify({ type: 'chat-response', text: cleanText, fixes }));
     console.log(`[AI ] Chat response sent (${response.usage.output_tokens} tokens)`);
 

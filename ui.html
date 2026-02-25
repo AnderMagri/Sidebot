@@ -1070,7 +1070,7 @@ function handleBridgeMessage(message) {
   }
 
   if (message.type === 'chat-response') {
-    console.log('🟢 chat-response received from bridge');
+    console.log('🟢 chat-response received from bridge | fixes:', JSON.stringify(message.fixes), '| text preview:', (message.text||'').slice(0,80));
     removeTypingIndicator(window._pendingTypingId);
     window._pendingTypingId = null;
     chatHistory.push({ role: 'assistant', content: message.text });
