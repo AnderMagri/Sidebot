@@ -342,10 +342,13 @@ figma.ui.onmessage = async (msg) => {
         : figma.currentPage.children.filter(function(n) {
             return ['FRAME', 'COMPONENT', 'COMPONENT_SET'].includes(n.type);
           });
+      console.log('🔍 targets:', targets.length);
       var data = targets.length > 0 ? deepScanSelection(targets) : null;
+      console.log('🔍 deepScan done');
 
       if (targets.length > 0) {
         try {
+          console.log('🔍 starting exportAsync...');
           // Race exportAsync against a 5-second timeout — prevents hanging on complex frames
           var bytes = await Promise.race([
             targets[0].exportAsync({ format: 'PNG', constraint: { type: 'SCALE', value: 1 } }),
@@ -353,17 +356,20 @@ figma.ui.onmessage = async (msg) => {
               setTimeout(function() { reject(new Error('export-timeout')); }, 5000);
             })
           ]);
+          console.log('🔍 export done, bytes:', bytes.length);
           var screenshot = uint8ArrayToBase64(bytes);
+          console.log('🔍 posting design-context-ready WITH screenshot');
           figma.ui.postMessage({ type: 'design-context-ready', data: data, screenshot: screenshot });
         } catch (e) {
-          // exportAsync failed or timed out — send without screenshot
+          console.log('🔍 export failed/timed out:', e.message, '— posting without screenshot');
           figma.ui.postMessage({ type: 'design-context-ready', data: data });
         }
       } else {
+        console.log('🔍 no targets — posting design-context-ready without data');
         figma.ui.postMessage({ type: 'design-context-ready', data: data });
       }
     } catch (e) {
-      // deepScanSelection or other error — still reply so the chat doesn't hang
+      console.log('🔍 outer catch:', e.message);
       figma.ui.postMessage({ type: 'design-context-ready', data: null });
     }
   }
