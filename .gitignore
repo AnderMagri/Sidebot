@@ -1,5 +1,3 @@
-# Bridge build output
-bridge/dist/
 
 # Node dependencies
 bridge/node_modules/
