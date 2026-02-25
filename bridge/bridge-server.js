@@ -277,8 +277,9 @@ wss.on('connection', (ws) => {
 
   ws.on('message', (data) => {
     try {
-      const message = JSON.parse(data);
-      console.log('[MSG] From plugin: ' + message.type);
+      const raw = data.toString();
+      const message = JSON.parse(raw);
+      console.log('[MSG] From plugin: ' + message.type + ' (' + Math.round(raw.length / 1024) + 'KB)');
 
       // ─ API key from Settings tab ─
       if (message.type === 'set-api-key') {
