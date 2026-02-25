@@ -201,15 +201,26 @@ Respond conversationally and concisely. When you identify specific issues, also 
 Keep responses under 200 words unless the user asks for detail.`;
 
 // ─── AI CHAT ───
-async function chatWithClaude(ws, text, history, designData) {
-  console.log(`[AI ] Chat message: "${text.slice(0, 60)}"`);
+async function chatWithClaude(ws, text, history, designData, screenshotBase64) {
+  console.log(`[AI ] Chat message: "${text.slice(0, 60)}" ${screenshotBase64 ? '(+screenshot)' : ''}`);
   try {
     const messages = [];
     history.slice(0, -1).forEach(m => messages.push({ role: m.role, content: m.content }));
-    const contextStr = designData
-      ? `\n\nCurrent Figma selection:\n${JSON.stringify(designData, null, 2)}`
-      : '\n\n(No frame selected — responding without design context)';
-    messages.push({ role: 'user', content: text + contextStr });
+
+    // Build user content — multimodal if screenshot present, plain text otherwise
+    let userContent;
+    if (screenshotBase64) {
+      userContent = [
+        { type: 'image', source: { type: 'base64', media_type: 'image/png', data: screenshotBase64 } },
+        { type: 'text', text: text + (designData ? `\n\nDesign metadata:\n${JSON.stringify(designData, null, 2)}` : '') }
+      ];
+    } else {
+      const contextStr = designData
+        ? `\n\nCurrent Figma selection:\n${JSON.stringify(designData, null, 2)}`
+        : '\n\n(No frame selected — responding without design context)';
+      userContent = text + contextStr;
+    }
+    messages.push({ role: 'user', content: userContent });
 
     const response = await anthropic.messages.create({
       model: 'claude-haiku-4-5',
@@ -287,7 +298,7 @@ wss.on('connection', (ws) => {
       // ─ Chat message ─
       if (message.type === 'chat-message') {
         if (anthropic) {
-          chatWithClaude(ws, message.text, message.history || [], message.designData);
+          chatWithClaude(ws, message.text, message.history || [], message.designData, message.screenshot || null);
         } else {
           ws.send(JSON.stringify({ type: 'chat-response', text: 'No API key configured. Go to Settings tab and paste your Anthropic API key.', fixes: [] }));
         }

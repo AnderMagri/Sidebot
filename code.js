@@ -154,6 +154,16 @@ function deepScanSelection(nodes) {
   };
 }
 
+// ─── UTILS ───
+function uint8ArrayToBase64(bytes) {
+  var binary = '';
+  var chunk = 1024;
+  for (var i = 0; i < bytes.length; i += chunk) {
+    binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk));
+  }
+  return btoa(binary);
+}
+
 // ─── MESSAGE HANDLERS ───
 figma.ui.onmessage = async (msg) => {
   console.log('📨', msg.type);
@@ -332,7 +342,19 @@ figma.ui.onmessage = async (msg) => {
           return ['FRAME', 'COMPONENT', 'COMPONENT_SET'].includes(n.type);
         });
     var data = targets.length > 0 ? deepScanSelection(targets) : null;
-    figma.ui.postMessage({ type: 'design-context-ready', data: data });
+
+    if (targets.length > 0) {
+      try {
+        var bytes = await targets[0].exportAsync({ format: 'PNG', constraint: { type: 'SCALE', value: 1 } });
+        var screenshot = uint8ArrayToBase64(bytes);
+        figma.ui.postMessage({ type: 'design-context-ready', data: data, screenshot: screenshot });
+      } catch (e) {
+        // exportAsync failed (e.g. unsupported node type) — send without screenshot
+        figma.ui.postMessage({ type: 'design-context-ready', data: data });
+      }
+    } else {
+      figma.ui.postMessage({ type: 'design-context-ready', data: data });
+    }
   }
 
   // ── SEND TO CLAUDE (bridge) ──

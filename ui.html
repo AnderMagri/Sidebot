@@ -1765,7 +1765,8 @@ window.onmessage = function(event) {
         text: window._pendingChatText,
         action: window._pendingChatAction || null,
         history: chatHistory.slice(-10),
-        designData: msg.data
+        designData: msg.data,
+        screenshot: msg.screenshot || null
       }));
     }
     window._pendingChatText = null;
