@@ -207,12 +207,13 @@ async function chatWithClaude(ws, text, history, designData, screenshotBase64) {
     const messages = [];
     history.slice(0, -1).forEach(m => messages.push({ role: m.role, content: m.content }));
 
-    // Build user content — multimodal if screenshot present, plain text otherwise
+    // Build user content — when screenshot present use image+text only (skip JSON dump,
+    // the image already provides visual context and the dump can be huge)
     let userContent;
     if (screenshotBase64) {
       userContent = [
         { type: 'image', source: { type: 'base64', media_type: 'image/png', data: screenshotBase64 } },
-        { type: 'text', text: text + (designData ? `\n\nDesign metadata:\n${JSON.stringify(designData, null, 2)}` : '') }
+        { type: 'text', text }
       ];
     } else {
       const contextStr = designData
@@ -221,6 +222,7 @@ async function chatWithClaude(ws, text, history, designData, screenshotBase64) {
       userContent = text + contextStr;
     }
     messages.push({ role: 'user', content: userContent });
+    console.log(`[AI ] Sending to Claude (messages: ${messages.length}, hasImage: ${!!screenshotBase64})`);
 
     const response = await anthropic.messages.create({
       model: 'claude-haiku-4-5-20251001',
