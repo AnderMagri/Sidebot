@@ -114,7 +114,7 @@ async function analyzeDesignWithClaude(ws, designData, action) {
 
   try {
     const response = await anthropic.messages.create({
-      model: 'claude-haiku-4-5',
+      model: 'claude-haiku-4-5-20251001',
       max_tokens: 4096,
       messages: [{
         role: 'user',
@@ -158,7 +158,7 @@ async function analyzeEdgeCasesWithClaude(ws, designData) {
 
   try {
     const response = await anthropic.messages.create({
-      model: 'claude-haiku-4-5',
+      model: 'claude-haiku-4-5-20251001',
       max_tokens: 2048,
       messages: [{
         role: 'user',
@@ -223,7 +223,7 @@ async function chatWithClaude(ws, text, history, designData, screenshotBase64) {
     messages.push({ role: 'user', content: userContent });
 
     const response = await anthropic.messages.create({
-      model: 'claude-haiku-4-5',
+      model: 'claude-haiku-4-5-20251001',
       max_tokens: 1024,
       system: CHAT_SYSTEM_PROMPT,
       messages
@@ -239,7 +239,11 @@ async function chatWithClaude(ws, text, history, designData, screenshotBase64) {
 
   } catch (err) {
     console.error('[AI ] Chat error:', err.message);
-    ws.send(JSON.stringify({ type: 'chat-response', text: `Error: ${err.message}. Check your API key in Settings.`, fixes: [] }));
+    try {
+      ws.send(JSON.stringify({ type: 'chat-response', text: `Error: ${err.message}`, fixes: [] }));
+    } catch (sendErr) {
+      console.error('[AI ] Could not send error to plugin:', sendErr.message);
+    }
   }
 }
 
