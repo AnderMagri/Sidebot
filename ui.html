@@ -491,6 +491,12 @@ textarea {
 .chat-fix-card .fix-detail { color: #888; }
 .chat-fix-done-btn { margin-top: 5px; background: #2a2a2a; border: 1px solid #444; color: #888; padding: 2px 8px; border-radius: 4px; font-size: 9px; cursor: pointer; }
 .chat-fix-done-btn:hover { color: #4ade80; border-color: #4ade80; }
+.chat-fix-btn { margin-top: 5px; background: #2563eb; border: 1px solid #3b82f6; color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 9px; cursor: pointer; }
+.chat-fix-btn:hover { background: #1d4ed8; }
+.chat-fix-btn:disabled { background: #2a2a2a; border-color: #444; color: #555; cursor: default; }
+.chat-annotate-btn { margin-top: 5px; background: #d97706; border: 1px solid #f59e0b; color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 9px; cursor: pointer; }
+.chat-annotate-btn:hover { background: #b45309; }
+.chat-annotate-btn:disabled { background: #2a2a2a; border-color: #444; color: #555; cursor: default; }
 .chat-input-bar { display: flex; align-items: flex-end; gap: 6px; padding: 8px 12px; border-top: 1px solid #2a2a2a; flex-shrink: 0; }
 .chat-input { flex: 1; background: #2a2a2a; border: 1px solid #3a3a3a; border-radius: 8px; color: #fff; font-size: 11px; padding: 7px 10px; resize: none; font-family: inherit; max-height: 80px; overflow-y: auto; line-height: 1.5; }
 .chat-input:focus { outline: none; border-color: #555; }
@@ -1432,9 +1438,55 @@ function addChatBubble(role, text, fixes) {
     fixes.forEach(function(f) {
       var card = document.createElement('div');
       card.className = 'chat-fix-card';
-      card.innerHTML = '<div class="fix-issue">⚠️ ' + escHtml(f.issue || f.nodeName) + '</div>' +
-        '<div class="fix-detail">' + escHtml(f.suggestion || f.description || '') + '</div>' +
-        '<button class="chat-fix-done-btn" onclick="this.textContent=\'Done ✓\';this.disabled=true;">Mark as Fixed</button>';
+
+      var issueEl = document.createElement('div');
+      issueEl.className = 'fix-issue';
+      issueEl.textContent = '⚠️ ' + (f.issue || f.nodeName || '');
+      card.appendChild(issueEl);
+
+      var detailEl = document.createElement('div');
+      detailEl.className = 'fix-detail';
+      detailEl.textContent = f.suggestion || f.description || '';
+      card.appendChild(detailEl);
+
+      if (f.correctedText) {
+        // Grammar fix — patch the text node directly
+        var fixBtn = document.createElement('button');
+        fixBtn.className = 'chat-fix-btn';
+        fixBtn.textContent = 'Fix in Figma ✦';
+        fixBtn.onclick = (function(fix, btn) {
+          return function() {
+            btn.textContent = 'Fixing…'; btn.disabled = true;
+            postToPlugin({ type: 'apply-text-fix', nodeId: fix.nodeId || null,
+              originalText: fix.originalText || null, correctedText: fix.correctedText });
+            setTimeout(function() { btn.textContent = 'Fixed ✓'; }, 600);
+          };
+        })(f, fixBtn);
+        card.appendChild(fixBtn);
+      } else if (f.category === 'contrast' || f.category === 'consistency') {
+        // Contrast / Consistency — add yellow annotation callout on canvas
+        var annoBtn = document.createElement('button');
+        annoBtn.className = 'chat-annotate-btn';
+        annoBtn.textContent = 'Annotate 📌';
+        annoBtn.onclick = (function(fix, btn) {
+          return function() {
+            btn.textContent = 'Annotating…'; btn.disabled = true;
+            postToPlugin({ type: 'annotate-node', nodeId: fix.nodeId || null,
+              actionType: fix.category,
+              description: fix.issue + (fix.suggestion ? ' — ' + fix.suggestion : '') });
+            setTimeout(function() { btn.textContent = 'Annotated ✓'; }, 600);
+          };
+        })(f, annoBtn);
+        card.appendChild(annoBtn);
+      } else {
+        // Generic — just mark as done in the UI
+        var doneBtn = document.createElement('button');
+        doneBtn.className = 'chat-fix-done-btn';
+        doneBtn.textContent = 'Mark as Fixed';
+        doneBtn.onclick = function() { this.textContent = 'Done ✓'; this.disabled = true; };
+        card.appendChild(doneBtn);
+      }
+
       div.appendChild(card);
     });
   }

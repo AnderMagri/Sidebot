@@ -441,20 +441,27 @@ figma.ui.onmessage = async (msg) => {
         y = target.absoluteBoundingBox.y;
       }
       const colorMap = {
-        grammar:    { r: 0.98, g: 0.60, b: 0.09 },
-        autolayout: { r: 0.23, g: 0.51, b: 0.96 },
-        alignment:  { r: 0.55, g: 0.36, b: 0.96 },
-        contrast:   { r: 0.94, g: 0.27, b: 0.27 },
-        missing:    { r: 0.94, g: 0.27, b: 0.27 },
-        ux:         { r: 0.13, g: 0.75, b: 0.56 }
+        grammar:     { r: 0.98, g: 0.60, b: 0.09 },
+        autolayout:  { r: 0.23, g: 0.51, b: 0.96 },
+        alignment:   { r: 0.55, g: 0.36, b: 0.96 },
+        contrast:    { r: 0.961, g: 0.620, b: 0.043 }, // yellow/amber
+        consistency: { r: 0.961, g: 0.620, b: 0.043 }, // yellow/amber
+        missing:     { r: 0.94, g: 0.27, b: 0.27 },
+        ux:          { r: 0.13, g: 0.75, b: 0.56 }
       };
-      const color = colorMap[msg.actionType] || colorMap.autolayout;
+      const color = colorMap[(msg.actionType || '').toLowerCase()] || colorMap.autolayout;
+
+      // For contrast/consistency use "ATTENTION" as category label
+      const isAttention = msg.actionType === 'contrast' || msg.actionType === 'consistency';
+      const labelText = isAttention
+        ? '⚠️ ATTENTION: ' + msg.actionType.toUpperCase()
+        : (msg.actionType || 'Issue').toUpperCase();
 
       const frame = figma.createFrame();
-      frame.name = '📌 ' + (msg.actionType || 'Issue');
+      frame.name = '📌 ' + labelText;
       frame.resize(240, 60);
       frame.x = x; frame.y = y;
-      frame.fills = [{ type: 'SOLID', color, opacity: 0.1 }];
+      frame.fills = [{ type: 'SOLID', color, opacity: 0.12 }];
       frame.strokes = [{ type: 'SOLID', color }];
       frame.strokeWeight = 1.5;
       frame.cornerRadius = 6;
@@ -466,7 +473,7 @@ figma.ui.onmessage = async (msg) => {
       const label = figma.createText();
       await figma.loadFontAsync({ family: 'Inter', style: 'Bold' });
       label.fontName = { family: 'Inter', style: 'Bold' };
-      label.characters = (msg.actionType || 'Issue').toUpperCase();
+      label.characters = labelText;
       label.fontSize = 9;
       label.fills = [{ type: 'SOLID', color }];
       frame.appendChild(label);

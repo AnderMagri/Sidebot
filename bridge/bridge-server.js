@@ -192,13 +192,26 @@ async function analyzeEdgeCasesWithClaude(ws, designData) {
 const CHAT_SYSTEM_PROMPT = `You are Sidebot, an AI design assistant embedded in Figma. You help designers analyze and improve their designs.
 
 When the user sends design data, you have access to text nodes, frame layouts, colors, and spacing.
-- For grammar/spelling: identify specific text nodes with errors
-- For contrast: check WCAG AA compliance (4.5:1 for normal text)
-- For consistency: look for mismatched fonts, spacing, colors
-- For edge cases: think like a developer about what states need handling
 
-Respond conversationally and concisely. When you identify specific issues, also return them as structured data in your response using a JSON code block.
-Keep responses under 200 words unless the user asks for detail.`;
+For GRAMMAR/SPELLING issues, return a JSON array like this (use nodeId from the text node list):
+\`\`\`json
+[{"nodeId":"1:23","originalText":"Helo World","correctedText":"Hello World","issue":"Typo: 'Helo'","suggestion":"Fix to 'Hello World'"}]
+\`\`\`
+Use the exact characters string from the text node list for originalText.
+
+For CONTRAST issues (WCAG AA: 4.5:1 normal text, 3:1 large text), return:
+\`\`\`json
+[{"nodeId":"1:23","category":"contrast","issue":"Text/bg ratio is 2.1:1 (needs 4.5:1)","suggestion":"Darken text or lighten background"}]
+\`\`\`
+
+For CONSISTENCY issues (mismatched fonts, spacing, colors), return:
+\`\`\`json
+[{"nodeId":"1:23","category":"consistency","issue":"Font size 12px here vs 14px elsewhere","suggestion":"Standardize to 14px"}]
+\`\`\`
+
+For EDGE CASES: respond conversationally, no JSON needed.
+
+Respond concisely. Keep responses under 200 words unless asked for detail.`;
 
 // ─── AI CHAT ───
 async function chatWithClaude(ws, text, history, designData, screenshotBase64) {
@@ -211,9 +224,16 @@ async function chatWithClaude(ws, text, history, designData, screenshotBase64) {
     // the image already provides visual context and the dump can be huge)
     let userContent;
     if (screenshotBase64) {
+      // Append compact text node list so Claude can reference nodeIds in fix JSON
+      const textSummary = (designData && designData.textNodes && designData.textNodes.length)
+        ? '\n\nText node IDs (use in fix JSON):\n' +
+          designData.textNodes.map(n =>
+            '  ' + n.id + ': "' + (n.characters || '').replace(/\n/g, '\\n') + '"'
+          ).join('\n')
+        : '';
       userContent = [
         { type: 'image', source: { type: 'base64', media_type: 'image/png', data: screenshotBase64 } },
-        { type: 'text', text }
+        { type: 'text', text: text + textSummary }
       ];
     } else {
       const contextStr = designData
