@@ -3,6 +3,9 @@
 bridge/node_modules/
 node_modules/
 
+# Compiled binaries (distributed via GitHub Releases)
+bridge/dist/
+
 # macOS
 .DS_Store
 **/.DS_Store

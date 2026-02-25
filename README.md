@@ -33,7 +33,7 @@ Work directly with Claude Desktop to validate your designs against PRD requireme
 - Perfect for occasional use
 
 **⚡ Seamless Mode (Advanced)**
-- Download [Sidebot Bridge](https://github.com/AnderMagri/Sidebot/tree/main/bridge/dist) (optional)
+- Download [Sidebot Bridge](https://github.com/AnderMagri/Sidebot/releases/latest) (optional)
 - Real-time sync with Claude Desktop
 - No copy/paste needed!
 - For power users
@@ -107,18 +107,21 @@ For power users who want zero copy/paste:
 
 ### 1. Install Sidebot Bridge
 
-Download from: **[github.com/AnderMagri/Sidebot/tree/main/bridge/dist](https://github.com/AnderMagri/Sidebot/tree/main/bridge/dist)**
+Download from: **[github.com/AnderMagri/Sidebot/releases/latest](https://github.com/AnderMagri/Sidebot/releases/latest)**
 
 **Mac:**
 ```bash
-# Download and extract
-# Double-click Sidebot-Bridge.app
+# Download sidebot-bridge-mac-x64
+chmod +x sidebot-bridge-mac-x64
+./sidebot-bridge-mac-x64
+
+# If macOS blocks it: right-click the file → Open → Open
 ```
 
 **Windows:**
 ```bash
-# Download and extract
-# Double-click Sidebot-Bridge.exe
+# Download sidebot-bridge-win-x64.exe
+# Double-click to run
 ```
 
 ### 2. Connect
