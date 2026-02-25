@@ -110,23 +110,23 @@ For power users who want zero copy/paste:
 Download from: **[github.com/AnderMagri/Sidebot/releases/latest](https://github.com/AnderMagri/Sidebot/releases/latest)**
 
 **Mac:**
-```bash
-# Download sidebot-bridge-mac-x64
-chmod +x sidebot-bridge-mac-x64
-./sidebot-bridge-mac-x64
+1. Download `SidebotBridge-mac.zip` and unzip it
+2. Move `SidebotBridge.app` anywhere you like — Desktop, Applications, or any folder
+3. Double-click `SidebotBridge.app` — a Terminal window opens with the bridge running
 
-# If macOS blocks it: right-click the file → Open → Open
-```
+> **macOS blocked the app?** This happens with apps downloaded from the internet.
+>
+> **Option A — Quick fix:** Right-click `SidebotBridge.app` → **Open** → **Open**
+>
+> **Option B — System Settings:** Go to **System Settings → Privacy & Security** → scroll down to the **Security** section → click **"Open Anyway"** next to the Sidebot Bridge message
 
 **Windows:**
-```bash
-# Download sidebot-bridge-win-x64.exe
-# Double-click to run
-```
+1. Download `sidebot-bridge-win-x64.exe`
+2. Double-click to run
 
 ### 2. Connect
 
-1. Start bridge (double-click)
+1. Start bridge (double-click the app)
 2. Open Sidebot plugin in Figma
 3. Watch header turn **🟢 Claude** (connected!)
 
