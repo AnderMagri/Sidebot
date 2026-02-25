@@ -33,7 +33,7 @@ Work directly with Claude Desktop to validate your designs against PRD requireme
 - Perfect for occasional use
 
 **⚡ Seamless Mode (Advanced)**
-- Download [Sidebot Bridge](https://github.com/AnderMagri/sidebot-bridge) (optional)
+- Download [Sidebot Bridge](https://github.com/AnderMagri/Sidebot/tree/main/bridge/dist) (optional)
 - Real-time sync with Claude Desktop
 - No copy/paste needed!
 - For power users
@@ -107,7 +107,7 @@ For power users who want zero copy/paste:
 
 ### 1. Install Sidebot Bridge
 
-Download from: **[github.com/AnderMagri/sidebot-bridge](https://github.com/AnderMagri/sidebot-bridge)**
+Download from: **[github.com/AnderMagri/Sidebot/tree/main/bridge/dist](https://github.com/AnderMagri/Sidebot/tree/main/bridge/dist)**
 
 **Mac:**
 ```bash
@@ -181,8 +181,8 @@ Are colors, fonts, and spacing consistent?
 ┌──────────────┐         ┌──────────────┐         ┌─────────────────┐
 │ Figma Plugin │         │ Bridge (opt) │         │ Claude Desktop  │
 │              │◄───────►│ localhost    │◄───────►│                 │
-│ • Stores PRDs│WebSocket│ • Port 3000  │  HTTP   │ • Analyzes      │
-│ • Tracks goals│        │ • Port 3001  │         │ • Sends fixes   │
+│ • Stores PRDs│WebSocket│ • Port 3001  │  HTTPS  │ • Analyzes      │
+│ • Tracks goals│        │ • localhost  │         │ • Sends fixes   │
 └──────────────┘         └──────────────┘         └─────────────────┘
 ```
 
@@ -268,7 +268,7 @@ MIT License - see LICENSE file
 ## 🆘 Support
 
 - **Plugin Issues:** Open issue in this repo
-- **Bridge Issues:** Open issue in [sidebot-bridge repo](https://github.com/AnderMagri/sidebot-bridge)
+- **Bridge Issues:** Open issue in [this repo](https://github.com/AnderMagri/Sidebot/issues)
 - **General Questions:** Discussions tab
 
 ---
