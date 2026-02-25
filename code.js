@@ -156,16 +156,20 @@ function deepScanSelection(nodes) {
 
 // ─── UTILS ───
 function uint8ArrayToBase64(bytes) {
-  // Figma's sandbox doesn't expose .subarray() — build slices manually
-  var chunk = 1024;
-  var parts = [];
-  for (var i = 0; i < bytes.length; i += chunk) {
-    var slice = [];
-    var end = Math.min(i + chunk, bytes.length);
-    for (var j = i; j < end; j++) { slice.push(bytes[j]); }
-    parts.push(String.fromCharCode.apply(null, slice));
+  // Pure JS base64 — Figma's sandbox has neither .subarray() nor btoa()
+  var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+  var len = bytes.length;
+  var out = '';
+  for (var i = 0; i < len; i += 3) {
+    var b0 = bytes[i];
+    var b1 = i + 1 < len ? bytes[i + 1] : 0;
+    var b2 = i + 2 < len ? bytes[i + 2] : 0;
+    out += chars[b0 >> 2];
+    out += chars[((b0 & 3) << 4) | (b1 >> 4)];
+    out += i + 1 < len ? chars[((b1 & 15) << 2) | (b2 >> 6)] : '=';
+    out += i + 2 < len ? chars[b2 & 63] : '=';
   }
-  return btoa(parts.join(''));
+  return out;
 }
 
 // ─── MESSAGE HANDLERS ───
