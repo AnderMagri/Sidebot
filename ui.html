@@ -1371,6 +1371,34 @@ function closeFixesActions() {}
 // ── CHAT STATE ──
 var chatHistory = [];
 
+function startChatSend(text, action) {
+  window._pendingChatText = text;
+  window._pendingChatAction = action || null;
+  window._pendingTypingId = addTypingIndicator();
+  // Safety net: if design-context-ready never arrives (e.g. exportAsync hangs past
+  // the 5s plugin timeout + some buffer), clear the indicator after 8 seconds.
+  clearTimeout(window._pendingChatTimeout);
+  window._pendingChatTimeout = setTimeout(function() {
+    if (window._pendingChatText) {
+      // Still pending — plugin reply never came; send without context
+      var savedText = window._pendingChatText;
+      var savedAction = window._pendingChatAction;
+      window._pendingChatText = null;
+      window._pendingChatAction = null;
+      if (bridgeConnected && bridgeSocket && bridgeSocket.readyState === WebSocket.OPEN) {
+        bridgeSocket.send(JSON.stringify({
+          type: 'chat-message', text: savedText, action: savedAction,
+          history: chatHistory.slice(-10), designData: null, screenshot: null
+        }));
+      } else {
+        removeTypingIndicator(window._pendingTypingId);
+        addChatBubble('assistant', '⚠️ Bridge disconnected. Reconnecting…', []);
+      }
+    }
+  }, 8000);
+  postToPlugin({ type: 'get-design-context' });
+}
+
 function sendChat() {
   var input = document.getElementById('chatInput');
   var text = input.value.trim();
@@ -1380,10 +1408,7 @@ function sendChat() {
   input.style.height = 'auto';
   addChatBubble('user', text);
   chatHistory.push({ role: 'user', content: text });
-  window._pendingChatText = text;
-  window._pendingChatAction = null;
-  window._pendingTypingId = addTypingIndicator();
-  postToPlugin({ type: 'get-design-context' });
+  startChatSend(text, null);
 }
 
 function chatShortcut(action) {
@@ -1392,10 +1417,7 @@ function chatShortcut(action) {
   var text = labels[action] || action;
   addChatBubble('user', text);
   chatHistory.push({ role: 'user', content: text });
-  window._pendingChatText = text;
-  window._pendingChatAction = action;
-  window._pendingTypingId = addTypingIndicator();
-  postToPlugin({ type: 'get-design-context' });
+  startChatSend(text, action);
 }
 
 function addChatBubble(role, text, fixes) {
@@ -1759,15 +1781,27 @@ window.onmessage = function(event) {
   }
 
   if (msg.type === 'design-context-ready') {
-    if (window._pendingChatText && bridgeConnected && bridgeSocket && bridgeSocket.readyState === WebSocket.OPEN) {
-      bridgeSocket.send(JSON.stringify({
-        type: 'chat-message',
-        text: window._pendingChatText,
-        action: window._pendingChatAction || null,
-        history: chatHistory.slice(-10),
-        designData: msg.data,
-        screenshot: msg.screenshot || null
-      }));
+    clearTimeout(window._pendingChatTimeout);
+    if (window._pendingChatText) {
+      if (bridgeConnected && bridgeSocket && bridgeSocket.readyState === WebSocket.OPEN) {
+        try {
+          bridgeSocket.send(JSON.stringify({
+            type: 'chat-message',
+            text: window._pendingChatText,
+            action: window._pendingChatAction || null,
+            history: chatHistory.slice(-10),
+            designData: msg.data,
+            screenshot: msg.screenshot || null
+          }));
+        } catch (e) {
+          // Send failed — remove typing indicator and show error
+          removeTypingIndicator(window._pendingTypingId);
+          addChatBubble('assistant', '⚠️ Failed to send message. Try again.', []);
+        }
+      } else {
+        removeTypingIndicator(window._pendingTypingId);
+        addChatBubble('assistant', '⚠️ Bridge disconnected. Reconnecting…', []);
+      }
     }
     window._pendingChatText = null;
     window._pendingChatAction = null;

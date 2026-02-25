@@ -336,24 +336,35 @@ figma.ui.onmessage = async (msg) => {
 
   // ── GET DESIGN CONTEXT (for chat) ──
   if (msg.type === 'get-design-context') {
-    var targets = figma.currentPage.selection.length > 0
-      ? [...figma.currentPage.selection]
-      : figma.currentPage.children.filter(function(n) {
-          return ['FRAME', 'COMPONENT', 'COMPONENT_SET'].includes(n.type);
-        });
-    var data = targets.length > 0 ? deepScanSelection(targets) : null;
+    try {
+      var targets = figma.currentPage.selection.length > 0
+        ? [...figma.currentPage.selection]
+        : figma.currentPage.children.filter(function(n) {
+            return ['FRAME', 'COMPONENT', 'COMPONENT_SET'].includes(n.type);
+          });
+      var data = targets.length > 0 ? deepScanSelection(targets) : null;
 
-    if (targets.length > 0) {
-      try {
-        var bytes = await targets[0].exportAsync({ format: 'PNG', constraint: { type: 'SCALE', value: 1 } });
-        var screenshot = uint8ArrayToBase64(bytes);
-        figma.ui.postMessage({ type: 'design-context-ready', data: data, screenshot: screenshot });
-      } catch (e) {
-        // exportAsync failed (e.g. unsupported node type) — send without screenshot
+      if (targets.length > 0) {
+        try {
+          // Race exportAsync against a 5-second timeout — prevents hanging on complex frames
+          var bytes = await Promise.race([
+            targets[0].exportAsync({ format: 'PNG', constraint: { type: 'SCALE', value: 1 } }),
+            new Promise(function(_, reject) {
+              setTimeout(function() { reject(new Error('export-timeout')); }, 5000);
+            })
+          ]);
+          var screenshot = uint8ArrayToBase64(bytes);
+          figma.ui.postMessage({ type: 'design-context-ready', data: data, screenshot: screenshot });
+        } catch (e) {
+          // exportAsync failed or timed out — send without screenshot
+          figma.ui.postMessage({ type: 'design-context-ready', data: data });
+        }
+      } else {
         figma.ui.postMessage({ type: 'design-context-ready', data: data });
       }
-    } else {
-      figma.ui.postMessage({ type: 'design-context-ready', data: data });
+    } catch (e) {
+      // deepScanSelection or other error — still reply so the chat doesn't hang
+      figma.ui.postMessage({ type: 'design-context-ready', data: null });
     }
   }
 
