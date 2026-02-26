@@ -508,9 +508,15 @@ textarea {
   40% { transform: translateY(-3px); opacity: 1; }
 }
 .chat-input-bar { display: flex; align-items: flex-end; gap: 6px; padding: 8px 12px; border-top: 1px solid #2a2a2a; flex-shrink: 0; }
-.chat-input { flex: 1; background: #2a2a2a; border: 1px solid #3a3a3a; border-radius: 8px; color: #fff; font-size: 11px; padding: 7px 10px; resize: none; font-family: inherit; max-height: 80px; overflow-y: auto; line-height: 1.5; }
+.chat-quick-btn { background: #2a2a2a; border: 1px solid #3a3a3a; color: #888; width: 30px; height: 30px; border-radius: 50%; font-size: 14px; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+.chat-quick-btn:hover { background: #333; border-color: #7B4FBE; color: #c4a0ff; }
+.chat-input-wrapper { position: relative; flex: 1; }
+.chat-input { width: 100%; background: #2a2a2a; border: 1px solid #3a3a3a; border-radius: 8px; color: #fff; font-size: 11px; padding: 7px 60px 7px 10px; resize: none; font-family: inherit; max-height: 80px; overflow-y: auto; line-height: 1.5; }
 .chat-input:focus { outline: none; border-color: #555; }
-.chat-send-btn { background: #2563eb; border: none; color: #fff; width: 30px; height: 30px; border-radius: 50%; font-size: 12px; cursor: pointer; flex-shrink: 0; }
+.chat-voice-btn { position: absolute; right: 32px; bottom: 5px; width: 24px; height: 24px; border-radius: 50%; background: transparent; border: none; color: #555; cursor: pointer; font-size: 13px; display: flex; align-items: center; justify-content: center; transition: color 0.2s; padding: 0; }
+.chat-voice-btn:hover { color: #999; }
+.chat-voice-btn.listening { color: #ef4444; animation: voicePulse 1s ease-in-out infinite; }
+.chat-send-btn { position: absolute; right: 5px; bottom: 5px; background: #2563eb; border: none; color: #fff; width: 26px; height: 26px; border-radius: 50%; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
 .chat-send-btn:hover { background: #1d4ed8; }
 .chat-send-btn:disabled { background: #333; color: #555; cursor: default; }
 
@@ -544,6 +550,22 @@ textarea {
 .confetti-blue   { background: #3b82f6; }
 .confetti-green  { background: #10b981; }
 .confetti-pink   { background: #ec4899; }
+
+/* ─── REFRESH SPIN ─── */
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.spinning { display: inline-block; animation: spin 0.7s linear infinite; }
+
+/* ─── VOICE PULSE ─── */
+@keyframes voicePulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+
+/* ─── TOAST ─── */
+#sidebotToast {
+  position: fixed; bottom: 68px; left: 12px; right: 12px;
+  background: #2a2a2a; border: 1px solid #444; border-radius: 8px;
+  padding: 8px 14px; font-size: 11px; color: #fff;
+  z-index: 9999; text-align: center; pointer-events: none;
+  transition: opacity 0.3s; opacity: 0;
+}
 </style>
 </head>
 <body>
@@ -683,14 +705,6 @@ Return format: {"projectName": "...", "goals": ["...", "..."]}</textarea>
 <!-- ══════════════ CHAT TAB ══════════════ -->
 <div class="tab-content" id="fixes-content">
 
-  <!-- Shortcut chips -->
-  <div class="chat-shortcuts">
-    <button class="chat-chip" onclick="chatShortcut('grammar')">🔤 Grammar</button>
-    <button class="chat-chip" onclick="chatShortcut('contrast')">🎨 Contrast</button>
-    <button class="chat-chip" onclick="chatShortcut('consistency')">📐 Consistency</button>
-    <button class="chat-chip" onclick="chatShortcut('edge-cases')">🔍 Edge Cases</button>
-  </div>
-
   <!-- Messages -->
   <div class="chat-messages" id="chatMessages">
     <div class="chat-empty" id="chatEmpty">
@@ -701,9 +715,13 @@ Return format: {"projectName": "...", "goals": ["...", "..."]}</textarea>
 
   <!-- Input -->
   <div class="chat-input-bar">
-    <textarea id="chatInput" class="chat-input" placeholder="Ask Claude about your design…" rows="1"
-      onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat();}"></textarea>
-    <button class="chat-send-btn" onclick="sendChat()">▶</button>
+    <button class="chat-quick-btn" onclick="openFixesActions()" title="Quick Actions">⚡</button>
+    <div class="chat-input-wrapper">
+      <textarea id="chatInput" class="chat-input" placeholder="Ask Claude about your design…" rows="1"
+        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat();}"></textarea>
+      <button class="chat-voice-btn" id="voiceBtn" onclick="startVoice()" title="Voice input">🎤</button>
+      <button class="chat-send-btn" onclick="sendChat()" title="Send">▶</button>
+    </div>
   </div>
 </div>
 
@@ -718,44 +736,44 @@ Return format: {"projectName": "...", "goals": ["...", "..."]}</textarea>
     <div class="sheet-body">
 
       <!-- Design Checks -->
-      <div class="section-title">Design Checks</div>
-      <div class="section-desc">Select a frame, then click an action. Results will appear in the Fixes tab.</div>
+      <div class="section-title">⚡ Quick Analysis</div>
+      <div class="section-desc">Select a frame first — results appear in Chat.</div>
       <div class="action-buttons" style="margin-bottom:20px;">
-        <button class="action-btn" onclick="checkGrammar()">
+        <button class="action-btn" onclick="closeFixesActions(); chatShortcut('grammar')">
           <span class="action-icon">🔤</span>
-          <span class="action-label">Check Grammar</span>
+          <span class="action-label">Grammar</span>
         </button>
-        <button class="action-btn" onclick="checkContrast()">
+        <button class="action-btn" onclick="closeFixesActions(); chatShortcut('contrast')">
           <span class="action-icon">🎨</span>
           <span class="action-label">Contrast</span>
         </button>
-        <button class="action-btn" onclick="checkConsistency()" style="grid-column:1/-1;">
+        <button class="action-btn" onclick="closeFixesActions(); chatShortcut('consistency')" style="grid-column:1/-1;">
           <span class="action-icon">📐</span>
-          <span class="action-label">Check Consistency — positions, fonts, styles</span>
+          <span class="action-label">Consistency — positions, fonts, styles</span>
         </button>
-        <button class="action-btn" onclick="checkEdgeCases()" style="grid-column:1/-1;">
-          <span class="action-icon">🧪</span>
+        <button class="action-btn" onclick="closeFixesActions(); chatShortcut('edge-cases')" style="grid-column:1/-1;">
+          <span class="action-icon">🔍</span>
           <span class="action-label">Edge Cases — adds sticky notes to canvas</span>
         </button>
       </div>
 
       <!-- Layer Tools -->
-      <div class="section-title">✏️ Layer Tools</div>
+      <div class="section-title">✏️ Rename Layers</div>
       <div class="section-desc">Renames layers in selection (or full page if nothing selected)</div>
       <div class="action-buttons">
-        <button class="action-btn" id="renameContentBtn" onclick="renameLayers('from-content')">
+        <button class="action-btn" id="renameContentBtn" onclick="closeFixesActions(); renameLayers('from-content')">
           <span class="action-icon">📝</span>
           <span class="action-label">From Content</span>
         </button>
-        <button class="action-btn" id="renameCleanBtn" onclick="renameLayers('clean')">
+        <button class="action-btn" id="renameCleanBtn" onclick="closeFixesActions(); renameLayers('clean')">
           <span class="action-icon">🧹</span>
           <span class="action-label">Clean Names</span>
         </button>
-        <button class="action-btn" id="renameTypeBtn" onclick="renameLayers('by-type')">
+        <button class="action-btn" id="renameTypeBtn" onclick="closeFixesActions(); renameLayers('by-type')">
           <span class="action-icon">🏷️</span>
           <span class="action-label">By Type</span>
         </button>
-        <button class="action-btn" id="renameNumBtn" onclick="renameLayers('number')">
+        <button class="action-btn" id="renameNumBtn" onclick="closeFixesActions(); renameLayers('number')">
           <span class="action-icon">🔢</span>
           <span class="action-label">Add Numbers</span>
         </button>
@@ -772,7 +790,7 @@ Return format: {"projectName": "...", "goals": ["...", "..."]}</textarea>
   <div class="settings-section">
     <div class="settings-header">
       <div class="settings-header-left">💡 Live Status</div>
-      <button onclick="refreshStatus()" style="background:transparent;border:1px solid #3a3a3a;color:#888;padding:3px 10px;border-radius:4px;font-size:10px;cursor:pointer;">↻ Refresh</button>
+      <button onclick="refreshStatus()" style="background:transparent;border:1px solid #3a3a3a;color:#888;padding:3px 10px;border-radius:4px;font-size:10px;cursor:pointer;"><span id="refreshArrow">↻</span> Refresh</button>
     </div>
 
     <div id="modeBadgeWrap" style="margin-bottom:10px;">
@@ -1014,6 +1032,8 @@ function connectToBridge() {
     };
 
     bridgeSocket.onclose = function() {
+      var arrow = document.getElementById('refreshArrow');
+      if (arrow) arrow.classList.remove('spinning');
       bridgeConnected = false;
       updateConnectionUI(false);
       postToPlugin({ type: 'connect-to-bridge', connected: false });
@@ -1029,6 +1049,8 @@ function connectToBridge() {
 function handleBridgeMessage(message) {
   if (message.type === 'connection-established') {
     clearTimeout(window._bridgeHandshakeTimeout);
+    var arrow = document.getElementById('refreshArrow');
+    if (arrow) arrow.classList.remove('spinning');
     bridgeConnected = true;
     updateConnectionUI(true);
     postToPlugin({ type: 'connect-to-bridge', connected: true });
@@ -1048,14 +1070,14 @@ function handleBridgeMessage(message) {
       postToPlugin({ type: 'create-project', name: message.projectName });
       window.pendingGoals = { goals: message.goals, prdText: message.prdText || '' };
     }
-    alert('✅ Claude added ' + message.goals.length + ' goals to "' + message.projectName + '"!');
+    showToast('✅ Claude added ' + message.goals.length + ' goals to "' + message.projectName + '"!');
   }
 
   if (message.type === 'add-fixes-from-claude') {
     var proj = allProjects.find(function(p) { return p.name === message.projectName; });
     if (proj) {
       postToPlugin({ type: 'add-fixes', projectId: proj.id, fixes: message.fixes });
-      alert('✅ Claude found ' + message.fixes.length + ' issues in "' + message.projectName + '"!');
+      showToast('✅ Claude found ' + message.fixes.length + ' issues in "' + message.projectName + '"!');
       setTimeout(function() { document.querySelector('[data-tab="fixes"]').click(); }, 500);
     }
   }
@@ -1165,6 +1187,8 @@ function toggleTroubleshoot(qEl) {
 function refreshStatus() {
   var bridgeDot = document.getElementById('bridgeDot');
   if (bridgeDot) bridgeDot.className = 'dot2 amber';
+  var arrow = document.getElementById('refreshArrow');
+  if (arrow) arrow.classList.add('spinning');
   bridgeConnected = false;
   connectToBridge(); // always force a fresh connection attempt
 }
@@ -1172,6 +1196,80 @@ function refreshStatus() {
 function goToSettings() {
   document.querySelector('[data-tab="settings"]').click();
 }
+
+// ── TOAST ──
+function showToast(message, duration) {
+  duration = duration || 3000;
+  var toast = document.getElementById('sidebotToast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'sidebotToast';
+    document.body.appendChild(toast);
+  }
+  toast.textContent = message;
+  toast.style.opacity = '1';
+  clearTimeout(toast._hideTimer);
+  toast._hideTimer = setTimeout(function() { toast.style.opacity = '0'; }, duration);
+}
+
+// ── VOICE INPUT ──
+var _voiceRecognition = null;
+function startVoice() {
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  var btn = document.getElementById('voiceBtn');
+  if (!SR) { showToast('🎤 Voice not supported here'); return; }
+
+  // Toggle off if already listening
+  if (_voiceRecognition) {
+    _voiceRecognition.stop();
+    _voiceRecognition = null;
+    if (btn) btn.classList.remove('listening');
+    return;
+  }
+
+  try {
+    var r = new SR();
+    r.lang = '';           // inherit system language — works with any OS language
+    r.continuous = false;
+    r.interimResults = false;
+    _voiceRecognition = r;
+    if (btn) btn.classList.add('listening');
+
+    r.onresult = function(e) {
+      var transcript = e.results[0][0].transcript;
+      var input = document.getElementById('chatInput');
+      if (input) { input.value = transcript; input.focus(); }
+      _voiceRecognition = null;
+      if (btn) btn.classList.remove('listening');
+    };
+    r.onerror = function(e) {
+      console.warn('Voice error:', e.error);
+      _voiceRecognition = null;
+      if (btn) btn.classList.remove('listening');
+      if (e.error !== 'aborted') showToast('🎤 ' + e.error);
+    };
+    r.onend = function() {
+      _voiceRecognition = null;
+      if (btn) btn.classList.remove('listening');
+    };
+    r.start();
+  } catch(e) {
+    _voiceRecognition = null;
+    if (btn) btn.classList.remove('listening');
+    showToast('🎤 Voice unavailable');
+  }
+}
+// Hide voice button if Web Speech API is not available
+(function() {
+  if (!window.SpeechRecognition && !window.webkitSpeechRecognition) {
+    var tryHide = function() {
+      var btn = document.getElementById('voiceBtn');
+      if (btn) { btn.style.display = 'none'; document.getElementById('chatInput').style.paddingRight = '34px'; }
+      else setTimeout(tryHide, 100);
+    };
+    tryHide();
+  }
+})();
 
 // ── ASK CLAUDE (adds project) ──
 function askClaude() {
@@ -1291,14 +1389,14 @@ function extractNotionText(blocks) {
 
 function sendPRDToClaude(pageId, title, prdText) {
   if (!bridgeConnected) {
-    alert('⚠️ Bridge not connected.\n\nStart SidebotBridge.app first.');
+    showToast('⚠️ Bridge offline — start SidebotBridge.app first');
     return;
   }
   bridgeSocket.send(JSON.stringify({
     type: 'prd-data', pageId: pageId, title: title, prdText: prdText,
     projectName: currentProject ? currentProject.name : 'New Project'
   }));
-  alert('📤 PRD sent to Claude! Ask Claude to parse it.');
+  showToast('📤 PRD sent to Claude!');
 }
 
 // ── INIT ──
@@ -1336,13 +1434,13 @@ function copyPrompt() {
 
 function importJSON() {
   var raw = document.getElementById('jsonInput').value.trim();
-  if (!raw) { alert('Please paste JSON from Claude!'); return; }
+  if (!raw) { showToast('Paste JSON from Claude first'); return; }
   try {
     var data = JSON.parse(raw);
     if (!data.projectName || !Array.isArray(data.goals)) {
-      alert('Invalid JSON. Need: {"projectName": "...", "goals": [...]}'); return;
+      showToast('Invalid JSON — need {"projectName": "...", "goals": [...]}'); return;
     }
-    if (!data.goals.length) { alert('No goals found!'); return; }
+    if (!data.goals.length) { showToast('No goals found in JSON'); return; }
     var existing = allProjects.find(function(p) { return p.name === data.projectName; });
     if (existing) {
       if (confirm('Project "' + data.projectName + '" exists. Replace goals with ' + data.goals.length + ' new ones?')) {
@@ -1356,7 +1454,7 @@ function importJSON() {
       window.pendingGoals = { goals: data.goals, prdText: data.prdText || '' };
       document.getElementById('jsonInput').value = '';
     }
-  } catch(e) { alert('Invalid JSON: ' + e.message); }
+  } catch(e) { showToast('Invalid JSON: ' + e.message); }
 }
 
 // ── PROJECT ACTIONS ──
@@ -1377,13 +1475,13 @@ function markFixDone(id) {
 
 // ── SEND TO CLAUDE ──
 function sendToClaude(mode) {
-  if (!bridgeConnected) { alert('⚠️ Bridge offline.\n\nStart SidebotBridge.app first.'); return; }
+  if (!bridgeConnected) { showToast('⚠️ Bridge offline — start SidebotBridge.app first'); return; }
   postToPlugin({ type: 'send-to-claude', mode: mode });
 }
 
-// ── FIXES ACTIONS SHEET (stubs — sheet no longer accessible) ──
-function openFixesActions()  {}
-function closeFixesActions() {}
+// ── QUICK ACTIONS SHEET ──
+function openFixesActions()  { document.getElementById('fixesActionsSheet').classList.add('open'); }
+function closeFixesActions() { document.getElementById('fixesActionsSheet').classList.remove('open'); }
 
 // ── CHAT STATE ──
 var chatHistory = [];
@@ -1420,7 +1518,7 @@ function sendChat() {
   var input = document.getElementById('chatInput');
   var text = input.value.trim();
   if (!text) return;
-  if (!bridgeConnected) { alert('⚠️ Bridge offline. Start SidebotBridge.app first.'); return; }
+  if (!bridgeConnected) { showToast('⚠️ Bridge offline — start SidebotBridge.app first'); return; }
   input.value = '';
   input.style.height = 'auto';
   addChatBubble('user', text);
@@ -1429,7 +1527,7 @@ function sendChat() {
 }
 
 function chatShortcut(action) {
-  if (!bridgeConnected) { alert('⚠️ Bridge offline. Start SidebotBridge.app first.'); return; }
+  if (!bridgeConnected) { showToast('⚠️ Bridge offline — start SidebotBridge.app first'); return; }
   var labels = { grammar: 'Check grammar and spelling', contrast: 'Check color contrast (WCAG AA)', consistency: 'Check design consistency', 'edge-cases': 'List edge cases for this screen' };
   var text = labels[action] || action;
   addChatBubble('user', text);
@@ -1497,20 +1595,12 @@ function addChatBubble(role, text, fixes) {
         })(f, annoBtn);
         card.appendChild(annoBtn);
       } else if (f.type === 'goal') {
-        // Goal suggestion — let user add it to their goals list
+        // Goal — auto-add immediately, no button click required
         issueEl.textContent = '🎯 ' + (f.text || '');
-        detailEl.textContent = f.category || '';
-        var goalBtn = document.createElement('button');
-        goalBtn.className = 'chat-goal-btn';
-        goalBtn.textContent = 'Add to Goals 🎯';
-        goalBtn.onclick = (function(fix, btn) {
-          return function() {
-            btn.textContent = 'Adding…'; btn.disabled = true;
-            postToPlugin({ type: 'chat-add-goal', text: fix.text, category: fix.category || 'general' });
-            setTimeout(function() { btn.textContent = 'Added ✓'; }, 500);
-          };
-        })(f, goalBtn);
-        card.appendChild(goalBtn);
+        issueEl.style.color = '#4ade80';
+        detailEl.textContent = (f.category ? f.category + ' · ' : '') + 'Added to Goals ✓';
+        detailEl.style.color = '#4ade80';
+        postToPlugin({ type: 'chat-add-goal', text: f.text, category: f.category || 'general' });
       } else {
         // Generic — just mark as done in the UI
         var doneBtn = document.createElement('button');
@@ -1844,7 +1934,7 @@ window.onmessage = function(event) {
   if (msg.type === 'bridge-status') { updateConnectionUI(msg.connected); }
 
   if (msg.type === 'edge-cases-created') {
-    alert('🧪 ' + msg.count + ' edge cases added as sticky notes on the canvas!');
+    showToast('🧪 ' + msg.count + ' edge cases added as sticky notes on the canvas!');
   }
 
   if (msg.type === 'claude-data-ready') {
@@ -1854,9 +1944,16 @@ window.onmessage = function(event) {
         data: { mode: msg.mode, pageName: msg.pageName, fileKey: msg.fileKey, nodes: msg.data,
                 projectName: currentProject ? currentProject.name : 'Unknown' }
       }));
-      alert('📤 Design sent to Claude!\n\nNow tell Claude:\n"Review my design against the PRD"');
+      // Seamless: switch to Chat, pre-fill prompt so user just hits send
+      document.querySelector('[data-tab="fixes"]').click();
+      var chatInput = document.getElementById('chatInput');
+      if (chatInput && !chatInput.value.trim()) {
+        chatInput.value = 'Review my design against the PRD';
+        chatInput.focus();
+      }
+      showToast('📤 Design sent — review prompt ready in Chat ↗');
     } else {
-      alert('⚠️ Bridge not connected.\n\nStart SidebotBridge.app first.');
+      showToast('⚠️ Bridge offline — start SidebotBridge.app first');
     }
   }
 
