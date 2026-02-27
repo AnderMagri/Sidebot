@@ -670,62 +670,54 @@ figma.ui.onmessage = async (msg) => {
       await figma.loadFontAsync({ family: 'Inter', style: 'Bold' });
       await figma.loadFontAsync({ family: 'Inter', style: 'Regular' });
 
-      const CARD_W = 240;
-      const OUTER  = 16;
-      const GAP    = 8;
+      const CARD_W = 220;
+      const CARD_GAP = 16;
 
-      // Outer container
+      // Outer wrapper frame (transparent, just for grouping + placement)
       const container = figma.createFrame();
-      container.name  = '🔍 Edge Cases — ' + frameName;
-      container.fills = [{ type: 'SOLID', color: { r: 0.10, g: 0.10, b: 0.14 } }];
-      container.cornerRadius = 8;
-      container.layoutMode   = 'VERTICAL';
-      container.paddingLeft = container.paddingRight = OUTER;
-      container.paddingTop  = container.paddingBottom = OUTER;
-      container.itemSpacing = GAP;
+      container.name   = '🧪 Edge Cases — ' + frameName;
+      container.fills  = [];
+      container.clipsContent = false;
+      container.layoutMode  = 'HORIZONTAL';
+      container.itemSpacing = CARD_GAP;
+      container.paddingLeft = container.paddingRight  = 0;
+      container.paddingTop  = container.paddingBottom = 0;
       container.primaryAxisSizingMode  = 'AUTO';
-      container.counterAxisSizingMode  = 'FIXED';
-      container.resize(CARD_W + OUTER * 2, 100);
+      container.counterAxisSizingMode  = 'AUTO';
 
-      // Section title
-      const title = figma.createText();
-      title.fontName    = { family: 'Inter', style: 'Bold' };
-      title.characters  = '🔍 Edge Cases — ' + frameName;
-      title.fontSize    = 11;
-      title.fills       = [{ type: 'SOLID', color: { r: 0.55, g: 0.55, b: 0.80 } }];
-      title.textAutoResize  = 'HEIGHT';
-      title.resize(CARD_W, 16);
-      container.appendChild(title);
-
-      // One sticky note per case
+      // One black box per case
       for (let i = 0; i < cases.length; i++) {
         const card = figma.createFrame();
-        card.name    = 'Edge Case ' + (i + 1);
-        card.fills   = [{ type: 'SOLID', color: { r: 1, g: 0.97, b: 0.70 } }];
-        card.cornerRadius = 4;
+        card.name         = 'Edge case ' + (i + 1);
+        card.fills        = [{ type: 'SOLID', color: { r: 0, g: 0, b: 0 } }];
+        card.cornerRadius = 6;
         card.layoutMode   = 'VERTICAL';
-        card.paddingLeft = card.paddingRight  = 10;
-        card.paddingTop  = card.paddingBottom = 8;
-        card.itemSpacing = 4;
+        card.paddingLeft  = card.paddingRight  = 14;
+        card.paddingTop   = card.paddingBottom = 12;
+        card.itemSpacing  = 6;
         card.primaryAxisSizingMode  = 'AUTO';
         card.counterAxisSizingMode  = 'FIXED';
         card.resize(CARD_W, 60);
 
-        const num = figma.createText();
-        num.fontName   = { family: 'Inter', style: 'Bold' };
-        num.characters = '#' + (i + 1);
-        num.fontSize   = 9;
-        num.fills      = [{ type: 'SOLID', color: { r: 0.45, g: 0.35, b: 0 } }];
-        card.appendChild(num);
+        // Title: "Edge case N"
+        const titleNode = figma.createText();
+        titleNode.fontName   = { family: 'Inter', style: 'Bold' };
+        titleNode.characters = 'Edge case ' + (i + 1);
+        titleNode.fontSize   = 10;
+        titleNode.fills      = [{ type: 'SOLID', color: { r: 0.6, g: 0.6, b: 0.6 } }];
+        titleNode.textAutoResize = 'HEIGHT';
+        titleNode.resize(CARD_W - 28, 14);
+        card.appendChild(titleNode);
 
-        const body = figma.createText();
-        body.fontName   = { family: 'Inter', style: 'Regular' };
-        body.characters = cases[i];
-        body.fontSize   = 11;
-        body.fills      = [{ type: 'SOLID', color: { r: 0.12, g: 0.10, b: 0 } }];
-        body.textAutoResize = 'HEIGHT';
-        body.resize(CARD_W - 20, 40);
-        card.appendChild(body);
+        // Body: edge case text
+        const bodyNode = figma.createText();
+        bodyNode.fontName   = { family: 'Inter', style: 'Regular' };
+        bodyNode.characters = cases[i];
+        bodyNode.fontSize   = 11;
+        bodyNode.fills      = [{ type: 'SOLID', color: { r: 1, g: 1, b: 1 } }];
+        bodyNode.textAutoResize = 'HEIGHT';
+        bodyNode.resize(CARD_W - 28, 40);
+        card.appendChild(bodyNode);
 
         container.appendChild(card);
       }
@@ -743,7 +735,7 @@ figma.ui.onmessage = async (msg) => {
       figma.currentPage.appendChild(container);
       figma.currentPage.selection = [container];
       figma.viewport.scrollAndZoomIntoView([container]);
-      figma.notify('✓ ' + cases.length + ' edge cases added to canvas');
+      figma.notify('✓ ' + cases.length + ' edge case' + (cases.length !== 1 ? 's' : '') + ' added to canvas');
       figma.ui.postMessage({ type: 'edge-cases-created', count: cases.length });
     } catch (e) {
       figma.notify('⚠️ Edge cases: ' + e.message);

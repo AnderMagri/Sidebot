@@ -102,6 +102,18 @@ body {
 }
 .tab:hover { opacity: 0.9; background: #333; }
 .tab.active { opacity: 1; border-bottom-color: #7B4FBE; background: #333; }
+.tab { position: relative; }
+.tab.has-updates::after {
+  content: '';
+  position: absolute;
+  top: 5px;
+  right: 6px;
+  width: 6px;
+  height: 6px;
+  background: #4ade80;
+  border-radius: 50%;
+  box-shadow: 0 0 5px #4ade8066;
+}
 
 /* ─── TAB CONTENT ─── */
 .tab-content {
@@ -502,6 +514,16 @@ textarea {
 .chat-goal-btn:disabled { background: #2a2a2a; border-color: #444; color: #555; cursor: default; }
 .typing-dots span { display: inline-block; animation: dotBounce 1.4s infinite both; }
 .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+.edge-case-selector { margin-top: 6px; }
+.edge-case-selector p { font-size: 11px; color: #bbb; margin: 0 0 8px; }
+.edge-case-list { display: flex; flex-direction: column; gap: 5px; margin-bottom: 10px; max-height: 220px; overflow-y: auto; }
+.edge-case-item { display: flex; align-items: flex-start; gap: 7px; cursor: pointer; }
+.edge-case-item input[type="checkbox"] { width: 14px; height: 14px; flex-shrink: 0; margin-top: 1px; accent-color: #7B4FBE; cursor: pointer; }
+.edge-case-item label { font-size: 10px; color: #ccc; line-height: 1.5; cursor: pointer; }
+.edge-case-item label strong { color: #999; font-weight: 600; }
+.edge-case-add-btn { background: #7B4FBE; border: none; color: #fff; padding: 5px 12px; border-radius: 5px; font-size: 10px; font-weight: 600; cursor: pointer; width: 100%; }
+.edge-case-add-btn:hover { background: #6d3fb0; }
+.edge-case-add-btn:disabled { background: #2a2a2a; color: #555; cursor: default; }
 .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
 @keyframes dotBounce {
   0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
@@ -511,14 +533,14 @@ textarea {
 .chat-quick-btn { background: #2a2a2a; border: 1px solid #3a3a3a; color: #888; width: 30px; height: 30px; border-radius: 50%; font-size: 14px; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
 .chat-quick-btn:hover { background: #333; border-color: #7B4FBE; color: #c4a0ff; }
 .chat-input-wrapper { position: relative; flex: 1; }
-.chat-input { width: 100%; background: #2a2a2a; border: 1px solid #3a3a3a; border-radius: 8px; color: #fff; font-size: 11px; padding: 7px 60px 7px 10px; resize: none; font-family: inherit; max-height: 80px; overflow-y: auto; line-height: 1.5; }
+.chat-input { width: 100%; background: #2a2a2a; border: 1px solid #3a3a3a; border-radius: 8px; color: #fff; font-size: 11px; padding: 7px 38px 7px 10px; resize: none; font-family: inherit; max-height: 80px; overflow-y: auto; line-height: 1.5; }
 .chat-input:focus { outline: none; border-color: #555; }
-.chat-voice-btn { position: absolute; right: 32px; bottom: 5px; width: 24px; height: 24px; border-radius: 50%; background: transparent; border: none; color: #555; cursor: pointer; font-size: 13px; display: flex; align-items: center; justify-content: center; transition: color 0.2s; padding: 0; }
-.chat-voice-btn:hover { color: #999; }
-.chat-voice-btn.listening { color: #ef4444; animation: voicePulse 1s ease-in-out infinite; }
-.chat-send-btn { position: absolute; right: 5px; bottom: 5px; background: #2563eb; border: none; color: #fff; width: 26px; height: 26px; border-radius: 50%; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
-.chat-send-btn:hover { background: #1d4ed8; }
-.chat-send-btn:disabled { background: #333; color: #555; cursor: default; }
+.chat-voice-btn { position: absolute; right: 5px; bottom: 5px; width: 26px; height: 26px; border-radius: 50%; background: #1e1e1e; border: 1.5px solid #3a3a3a; color: #777; cursor: pointer; font-size: 13px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; padding: 0; }
+.chat-voice-btn:hover { background: #2a2a2a; border-color: #7B4FBE; color: #c4a0ff; }
+.chat-voice-btn.send-mode { background: #2563eb; border-color: #3b82f6; color: #fff; font-size: 11px; }
+.chat-voice-btn.send-mode:hover { background: #1d4ed8; border-color: #1d4ed8; }
+.chat-voice-btn.listening { background: #ef4444; border-color: #ef4444; color: #fff; animation: voicePulse 1s ease-in-out infinite; }
+.chat-send-btn { display: none; }
 
 /* ─── API KEY INLINE ROW (in settings LED section) ─── */
 .api-key-row {
@@ -615,12 +637,6 @@ textarea {
     </div>
   </div>
 
-  <!-- Ask Claude button -->
-  <button class="ask-claude-btn offline" id="askClaudeBtn" onclick="askClaude()">
-    <span>🤖</span>
-    <span id="askClaudeBtnLabel">Ask Claude to Add Project — Bridge offline</span>
-  </button>
-
   <!-- Project list -->
   <div class="project-list" id="projectList"></div>
 
@@ -636,15 +652,30 @@ textarea {
       <button class="sheet-close" onclick="closeAddProject()">✕</button>
     </div>
     <div class="sheet-body">
-      <div class="section-desc">1. Copy this prompt and paste in Claude Desktop with your PRD:</div>
-      <textarea id="promptTemplate" readonly rows="3" onclick="copyPrompt()" style="margin-bottom:12px;opacity:0.8;cursor:pointer;background:#2a2a2a;font-size:10px;">Analyze this PRD and create JSON for Sidebot:
+      <div class="section-desc">Paste your PRD or briefing:</div>
+      <textarea id="prdPasteInput" rows="6"
+        placeholder="Paste your PRD, feature brief, or design requirements here…"
+        style="font-size:11px;margin-bottom:10px;"></textarea>
 
-[Paste your PRD here]
+      <!-- Bridge ONLINE: Claude analyzes automatically -->
+      <div id="prdOnlineSection" style="display:none;">
+        <button class="btn-primary" onclick="analyzePRD()">🤖 Let Claude Analyze →</button>
+      </div>
 
-Return format: {"projectName": "...", "goals": ["...", "..."]}</textarea>
-      <div class="section-desc" style="margin-top:12px;">2. Paste Claude's JSON response here:</div>
-      <textarea id="jsonInput" rows="4" placeholder='{"projectName": "My Project", "goals": ["Goal 1", "Goal 2"]}' style="font-size:11px;"></textarea>
-      <button class="btn-success" onclick="importJSON()">✨ Import Project + Goals</button>
+      <!-- Bridge OFFLINE: copy prompt + JSON paste fallback -->
+      <div id="prdOfflineSection">
+        <div class="section-desc" style="margin-top:6px;opacity:0.6;font-size:10px;line-height:1.6;">
+          Bridge offline — copy the prompt below, open Claude.ai, paste your PRD there, then paste Claude's JSON response back here:
+        </div>
+        <textarea id="promptTemplate" readonly rows="3" onclick="copyPrompt()"
+          style="margin-bottom:10px;opacity:0.7;cursor:pointer;background:#2a2a2a;font-size:10px;">Analyze this PRD and return ONLY valid JSON (no markdown):
+{"projectName": "...", "goals": ["Goal 1", "Goal 2"]}</textarea>
+        <div class="section-desc" style="margin-top:6px;">Paste Claude's JSON response:</div>
+        <textarea id="jsonInput" rows="3"
+          placeholder='{"projectName": "My App", "goals": ["Goal 1", "Goal 2"]}'
+          style="font-size:11px;"></textarea>
+        <button class="btn-success" onclick="importJSON()" style="margin-top:8px;">✨ Import Project + Goals</button>
+      </div>
     </div>
   </div>
 </div>
@@ -718,9 +749,9 @@ Return format: {"projectName": "...", "goals": ["...", "..."]}</textarea>
     <button class="chat-quick-btn" onclick="openFixesActions()" title="Quick Actions">⚡</button>
     <div class="chat-input-wrapper">
       <textarea id="chatInput" class="chat-input" placeholder="Ask Claude about your design…" rows="1"
+        oninput="updateVoiceBtn()"
         onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat();}"></textarea>
       <button class="chat-voice-btn" id="voiceBtn" onclick="startVoice()" title="Voice input">🎤</button>
-      <button class="chat-send-btn" onclick="sendChat()" title="Send">▶</button>
     </div>
   </div>
 </div>
@@ -736,7 +767,7 @@ Return format: {"projectName": "...", "goals": ["...", "..."]}</textarea>
     <div class="sheet-body">
 
       <!-- Design Checks -->
-      <div class="section-title">⚡ Quick Analysis</div>
+      <div class="section-title">🚀 Quick Analysis</div>
       <div class="section-desc">Select a frame first — results appear in Chat.</div>
       <div class="action-buttons" style="margin-bottom:20px;">
         <button class="action-btn" onclick="closeFixesActions(); chatShortcut('grammar')">
@@ -747,13 +778,9 @@ Return format: {"projectName": "...", "goals": ["...", "..."]}</textarea>
           <span class="action-icon">🎨</span>
           <span class="action-label">Contrast</span>
         </button>
-        <button class="action-btn" onclick="closeFixesActions(); chatShortcut('consistency')" style="grid-column:1/-1;">
-          <span class="action-icon">📐</span>
-          <span class="action-label">Consistency — positions, fonts, styles</span>
-        </button>
         <button class="action-btn" onclick="closeFixesActions(); chatShortcut('edge-cases')" style="grid-column:1/-1;">
-          <span class="action-icon">🔍</span>
-          <span class="action-label">Edge Cases — adds sticky notes to canvas</span>
+          <span class="action-icon">🧪</span>
+          <span class="action-label">Edge Cases</span>
         </button>
       </div>
 
@@ -1083,20 +1110,39 @@ function handleBridgeMessage(message) {
   }
 
   if (message.type === 'add-edge-cases-from-claude') {
-    // Claude returned edge cases — create sticky notes on canvas
+    // Claude returned edge cases — show selection UI in chat
     var cases     = message.cases || [];
     var frameName = message.frameName || 'Screen';
-    if (cases.length) {
-      postToPlugin({ type: 'create-edge-cases', cases: cases, frameName: frameName });
-    }
+    if (cases.length) renderEdgeCaseSelector(cases, frameName);
   }
 
   if (message.type === 'chat-response') {
     console.log('🟢 chat-response received from bridge | fixes:', JSON.stringify(message.fixes), '| text preview:', (message.text||'').slice(0,80));
+    var pendingAction = window._lastChatAction;
+    window._lastChatAction = null;
     removeTypingIndicator(window._pendingTypingId);
     window._pendingTypingId = null;
     chatHistory.push({ role: 'assistant', content: message.text });
     addChatBubble('assistant', message.text, message.fixes || []);
+
+    // PRD auto-import: extract JSON from Claude response and create project
+    if (pendingAction === 'prd-import') {
+      var jsonMatch = (message.text || '').match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        try {
+          var parsed = JSON.parse(jsonMatch[0]);
+          if (parsed.projectName && Array.isArray(parsed.goals)) {
+            importFromData(parsed);
+            showToast('✅ Project "' + parsed.projectName + '" created from PRD!');
+          }
+        } catch(e) { showToast('⚠️ Could not parse project data from response'); }
+      }
+    }
+
+    // PRD review: detect ✅ goals and auto-tick them
+    if (pendingAction === 'prd-review') {
+      checkGoalFulfillment(message.text || '');
+    }
   }
 }
 
@@ -1121,15 +1167,10 @@ function updateConnectionUI(connected) {
   var banner = document.getElementById('apiBanner');
   banner.classList.toggle('hidden', connected);
 
-  // Ask Claude button
-  var btn   = document.getElementById('askClaudeBtn');
-  var label = document.getElementById('askClaudeBtnLabel');
-  if (connected) {
-    btn.className     = 'ask-claude-btn online';
-    label.textContent = 'Ask Claude to Add Project';
-  } else {
-    btn.className     = 'ask-claude-btn offline';
-    label.textContent = 'Ask Claude to Add Project — Bridge offline';
+  // If Add Project sheet is open, live-update the online/offline sections
+  if (document.getElementById('addProjectSheet').classList.contains('open')) {
+    document.getElementById('prdOnlineSection').style.display  = connected ? '' : 'none';
+    document.getElementById('prdOfflineSection').style.display = connected ? 'none' : '';
   }
 
   // Settings: mode badge
@@ -1238,7 +1279,7 @@ function startVoice() {
     r.onresult = function(e) {
       var transcript = e.results[0][0].transcript;
       var input = document.getElementById('chatInput');
-      if (input) { input.value = transcript; input.focus(); }
+      if (input) { input.value = transcript; input.focus(); updateVoiceBtn(); }
       _voiceRecognition = null;
       if (btn) btn.classList.remove('listening');
     };
@@ -1259,15 +1300,38 @@ function startVoice() {
     showToast('🎤 Voice unavailable');
   }
 }
-// Hide voice button if Web Speech API is not available
+
+function updateVoiceBtn() {
+  var btn   = document.getElementById('voiceBtn');
+  var input = document.getElementById('chatInput');
+  if (!btn || !input) return;
+  var hasText = input.value.trim().length > 0;
+  if (hasText) {
+    btn.textContent = '▶';
+    btn.title       = 'Send';
+    btn.classList.add('send-mode');
+    btn.onclick = function() { sendChat(); };
+  } else {
+    btn.textContent = '🎤';
+    btn.title       = 'Voice input';
+    btn.classList.remove('send-mode');
+    btn.onclick = function() { startVoice(); };
+  }
+}
+
+// If Web Speech API is unavailable, keep button as permanent send arrow
 (function() {
   if (!window.SpeechRecognition && !window.webkitSpeechRecognition) {
-    var tryHide = function() {
+    var trySet = function() {
       var btn = document.getElementById('voiceBtn');
-      if (btn) { btn.style.display = 'none'; document.getElementById('chatInput').style.paddingRight = '34px'; }
-      else setTimeout(tryHide, 100);
+      if (btn) {
+        btn.textContent = '▶';
+        btn.title       = 'Send';
+        btn.classList.add('send-mode');
+        btn.onclick = function() { sendChat(); };
+      } else { setTimeout(trySet, 100); }
     };
-    tryHide();
+    trySet();
   }
 })();
 
@@ -1410,6 +1474,8 @@ document.querySelectorAll('.tab').forEach(function(tab) {
     tab.classList.add('active');
     document.querySelectorAll('.tab-content').forEach(function(c) { c.classList.remove('active'); });
     document.getElementById(tab.dataset.tab + '-content').classList.add('active');
+    // Clear notification dot when Goals tab is opened
+    if (tab.dataset.tab === 'goals') tab.classList.remove('has-updates');
   });
 });
 
@@ -1421,7 +1487,11 @@ document.addEventListener('keydown', function(e) {
 });
 
 // ── PROJECT SHEETS ──
-function openAddProject()  { document.getElementById('addProjectSheet').classList.add('open'); }
+function openAddProject() {
+  document.getElementById('addProjectSheet').classList.add('open');
+  document.getElementById('prdOnlineSection').style.display  = bridgeConnected ? '' : 'none';
+  document.getElementById('prdOfflineSection').style.display = bridgeConnected ? 'none' : '';
+}
 function closeAddProject() { document.getElementById('addProjectSheet').classList.remove('open'); }
 
 function copyPrompt() {
@@ -1432,29 +1502,72 @@ function copyPrompt() {
   setTimeout(function() { t.style.background = bg; }, 200);
 }
 
+function importFromData(data) {
+  if (!data.projectName || !Array.isArray(data.goals)) {
+    showToast('Invalid data — need {"projectName": "...", "goals": [...]}'); return;
+  }
+  if (!data.goals.length) { showToast('No goals found in data'); return; }
+  var existing = allProjects.find(function(p) { return p.name === data.projectName; });
+  if (existing) {
+    if (confirm('Project "' + data.projectName + '" exists. Replace goals with ' + data.goals.length + ' new ones?')) {
+      postToPlugin({ type: 'add-goals', projectId: existing.id, goals: data.goals, prdText: data.prdText || '' });
+      selectProject(existing.id);
+      setTimeout(function() { document.querySelector('[data-tab="goals"]').click(); }, 100);
+    }
+  } else {
+    postToPlugin({ type: 'create-project', name: data.projectName });
+    window.pendingGoals = { goals: data.goals, prdText: data.prdText || '' };
+  }
+}
+
 function importJSON() {
   var raw = document.getElementById('jsonInput').value.trim();
   if (!raw) { showToast('Paste JSON from Claude first'); return; }
   try {
     var data = JSON.parse(raw);
-    if (!data.projectName || !Array.isArray(data.goals)) {
-      showToast('Invalid JSON — need {"projectName": "...", "goals": [...]}'); return;
-    }
-    if (!data.goals.length) { showToast('No goals found in JSON'); return; }
-    var existing = allProjects.find(function(p) { return p.name === data.projectName; });
-    if (existing) {
-      if (confirm('Project "' + data.projectName + '" exists. Replace goals with ' + data.goals.length + ' new ones?')) {
-        postToPlugin({ type: 'add-goals', projectId: existing.id, goals: data.goals, prdText: data.prdText || '' });
-        document.getElementById('jsonInput').value = '';
-        selectProject(existing.id);
-        setTimeout(function() { document.querySelector('[data-tab="goals"]').click(); }, 100);
-      }
-    } else {
-      postToPlugin({ type: 'create-project', name: data.projectName });
-      window.pendingGoals = { goals: data.goals, prdText: data.prdText || '' };
-      document.getElementById('jsonInput').value = '';
-    }
+    importFromData(data);
+    document.getElementById('jsonInput').value = '';
   } catch(e) { showToast('Invalid JSON: ' + e.message); }
+}
+
+function analyzePRD() {
+  var prdText = document.getElementById('prdPasteInput').value.trim();
+  if (!prdText) { showToast('⚠️ Paste your PRD first'); return; }
+  var prompt = 'Analyze this PRD and extract the project name and all key goals/requirements.\n\n' +
+    'Return ONLY valid JSON with this exact format (no markdown, no explanation):\n' +
+    '{"projectName": "Name", "goals": ["Goal 1", "Goal 2"]}\n\nPRD:\n' + prdText;
+  closeAddProject();
+  document.querySelector('[data-tab="fixes"]').click();
+  addChatBubble('user', '📋 Analyzing PRD…');
+  chatHistory.push({ role: 'user', content: prompt });
+  startChatSend(prompt, 'prd-import');
+}
+
+function checkGoalFulfillment(responseText) {
+  if (!currentProject || !currentProject.goals || !currentProject.goals.length) return;
+  var lines = responseText.split('\n');
+  var fulfilled = [];
+  currentProject.goals.forEach(function(goal) {
+    if (goal.status === 'done') return;
+    var keywords = goal.text.toLowerCase().split(/\s+/).filter(function(w) { return w.length > 4; });
+    lines.forEach(function(line) {
+      if ((line.includes('✅') || line.includes('✓')) && fulfilled.indexOf(goal.id) === -1) {
+        var hits = keywords.filter(function(w) { return line.toLowerCase().includes(w); });
+        if (hits.length >= Math.max(1, Math.floor(keywords.length * 0.5))) {
+          fulfilled.push(goal.id);
+        }
+      }
+    });
+  });
+  if (!fulfilled.length) return;
+  fulfilled.forEach(function(goalId) {
+    postToPlugin({ type: 'toggle-goal', projectId: currentProject.id, goalId: goalId });
+  });
+  var goalsTab = document.querySelector('[data-tab="goals"]');
+  if (goalsTab && !goalsTab.classList.contains('active')) {
+    goalsTab.classList.add('has-updates');
+  }
+  showToast('🎯 ' + fulfilled.length + ' goal' + (fulfilled.length > 1 ? 's' : '') + ' marked as fulfilled!');
 }
 
 // ── PROJECT ACTIONS ──
@@ -1473,10 +1586,30 @@ function markFixDone(id) {
   postToPlugin({ type: 'mark-fix-done', projectId: currentProject.id, fixId: id });
 }
 
-// ── SEND TO CLAUDE ──
+// ── SEND TO CLAUDE (PRD review from Goals tab) ──
 function sendToClaude(mode) {
   if (!bridgeConnected) { showToast('⚠️ Bridge offline — start SidebotBridge.app first'); return; }
-  postToPlugin({ type: 'send-to-claude', mode: mode });
+  if (!currentProject) { showToast('⚠️ No project selected — create a project first'); return; }
+
+  // Build a prompt that embeds all PRD goals so Claude knows what to check against
+  var goalLines = '';
+  if (currentProject.goals && currentProject.goals.length) {
+    goalLines = '\n\nRequirements to verify:\n' +
+      currentProject.goals.map(function(g, i) { return (i + 1) + '. ' + g.text; }).join('\n');
+  }
+  if (currentProject.prdText) {
+    goalLines += '\n\nPRD context:\n' + currentProject.prdText.slice(0, 1500);
+  }
+
+  var scopeLabel   = mode === 'selection' ? 'the selected frames' : 'the current page';
+  var displayText  = '📋 Review ' + (mode === 'selection' ? 'selection' : 'current page') + ' against PRD';
+  var fullPrompt   = 'Review ' + scopeLabel + ' against the PRD. For each requirement, mark it ✅ covered, ⚠️ partially covered, or ❌ missing from the design. Be specific about what you see in the design.' + goalLines;
+
+  // Switch to Chat tab and auto-send (no manual press needed)
+  document.querySelector('[data-tab="fixes"]').click();
+  addChatBubble('user', displayText);
+  chatHistory.push({ role: 'user', content: fullPrompt });
+  startChatSend(fullPrompt, 'prd-review');
 }
 
 // ── QUICK ACTIONS SHEET ──
@@ -1489,6 +1622,7 @@ var chatHistory = [];
 function startChatSend(text, action) {
   window._pendingChatText = text;
   window._pendingChatAction = action || null;
+  window._lastChatAction = action || null; // persists until chat-response is handled
   window._pendingTypingId = addTypingIndicator();
   // Safety net: if design-context-ready never arrives (e.g. exportAsync hangs past
   // the 5s plugin timeout + some buffer), clear the indicator after 8 seconds.
@@ -1521,6 +1655,7 @@ function sendChat() {
   if (!bridgeConnected) { showToast('⚠️ Bridge offline — start SidebotBridge.app first'); return; }
   input.value = '';
   input.style.height = 'auto';
+  updateVoiceBtn();
   addChatBubble('user', text);
   chatHistory.push({ role: 'user', content: text });
   startChatSend(text, null);
@@ -1747,8 +1882,74 @@ function onGoalDrop(e, targetId) {
   postToPlugin({ type: 'reorder-goals', projectId: currentProject.id, goals: goals });
 }
 
-// ── EDGE CASES (now handled via chatShortcut) ──
+// ── EDGE CASES ──
 function checkEdgeCases() { chatShortcut('edge-cases'); }
+
+function renderEdgeCaseSelector(cases, frameName) {
+  var empty = document.getElementById('chatEmpty');
+  if (empty) empty.style.display = 'none';
+  var msgs = document.getElementById('chatMessages');
+
+  var bubble = document.createElement('div');
+  bubble.className = 'chat-bubble assistant';
+
+  var selector = document.createElement('div');
+  selector.className = 'edge-case-selector';
+
+  var intro = document.createElement('p');
+  intro.textContent = 'I found ' + cases.length + ' edge cases. Select the ones to add to the canvas:';
+  selector.appendChild(intro);
+
+  var list = document.createElement('div');
+  list.className = 'edge-case-list';
+
+  cases.forEach(function(c, i) {
+    var item = document.createElement('div');
+    item.className = 'edge-case-item';
+
+    var cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.checked = true;
+    cb.id = 'ec-' + i + '-' + Date.now();
+
+    var lbl = document.createElement('label');
+    lbl.htmlFor = cb.id;
+    lbl.innerHTML = '<strong>Edge case ' + (i + 1) + '</strong> — ' + escapeHtml(c);
+
+    item.appendChild(cb);
+    item.appendChild(lbl);
+    list.appendChild(item);
+  });
+  selector.appendChild(list);
+
+  var addBtn = document.createElement('button');
+  addBtn.className = 'edge-case-add-btn';
+  addBtn.textContent = 'Add to Figma';
+  addBtn.onclick = function() { confirmEdgeCases(addBtn, list, cases, frameName); };
+  selector.appendChild(addBtn);
+
+  bubble.appendChild(selector);
+  msgs.appendChild(bubble);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function confirmEdgeCases(btn, list, cases, frameName) {
+  var checkboxes = list.querySelectorAll('input[type="checkbox"]');
+  var selected = [];
+  checkboxes.forEach(function(cb, i) {
+    if (cb.checked) selected.push(cases[i]);
+    cb.disabled = true;
+  });
+  if (!selected.length) { showToast('Select at least one edge case.'); return; }
+  btn.disabled = true;
+  btn.textContent = 'Adding…';
+  postToPlugin({ type: 'create-edge-cases', cases: selected, frameName: frameName });
+  setTimeout(function() { btn.textContent = 'Added ✓'; }, 600);
+}
+
+function escapeHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
 
 // ── LAYER RENAME ──
 function renameLayers(type) {
